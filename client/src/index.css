@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #000000;
+  color: #ffffff;
+  font-family: "IBM Plex Mono", "Courier New", ui-monospace, monospace;
+  overflow: hidden; /* the panel grid owns all scrolling */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Bloomberg-style thin scrollbars ─────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #ff6600;
+}
+
+@layer components {
+  /* Every panel: black body with a 1px amber top accent border. */
+  .panel {
+    @apply flex flex-col bg-bg-panel border border-term-border overflow-hidden;
+    border-top: 1px solid #ff6600;
+  }
+  .panel-header {
+    @apply flex items-center justify-between px-2 py-1 bg-bg-header
+           text-accent-amber text-2xs font-semibold uppercase tracking-wider
+           border-b border-term-border select-none;
+  }
+  .panel-body {
+    @apply flex-1 overflow-auto;
+  }
+  .num {
+    @apply font-mono tabular-nums text-right;
+  }
+  .badge-error {
+    @apply text-2xs text-term-red border border-term-red px-1 uppercase tracking-wider;
+  }
+  .focus-ring:focus {
+    @apply outline-none ring-1 ring-accent-orange;
+  }
+}
+
+@layer utilities {
+  .up {
+    color: #00ff41;
+  }
+  .down {
+    color: #ff3333;
+  }
+  .flat {
+    color: #888888;
+  }
+}
+
+/* ── Loading skeleton: flickering bars in the Bloomberg style ─────── */
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+.skeleton-bar {
+  background: linear-gradient(90deg, #1a1a1a, #333333, #1a1a1a);
+  animation: flicker 1s ease-in-out infinite;
+}
+
+/* ── LIVE pulse dot ──────────────────────────────────────────────── */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(0, 255, 65, 0.5);
+  }
+  50% {
+    opacity: 0.5;
+    box-shadow: 0 0 0 3px rgba(0, 255, 65, 0);
+  }
+}
+.live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #00ff41;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.live-dot.stale {
+  background: #888888;
+  animation: none;
+}
