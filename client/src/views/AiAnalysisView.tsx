@@ -119,11 +119,11 @@ export function AiAnalysisView({ symbol }: { symbol: string }) {
           <div className="max-w-md space-y-3 text-left">
             <div>
               <div className="text-2xs text-accent-amber uppercase">What this is</div>
-              <p className="text-xs text-term-white">An AI equity analyst (powered by Claude) that explains what the company does, its strategy, 5-year financial trajectory, who's buying it, valuation vs peers, bull/bear case and risks — plus a chat box to ask follow-ups.</p>
+              <p className="text-xs text-term-white">An AI equity analyst (powered by DeepSeek) that explains what the company does, its strategy, 5-year financial trajectory, who's buying it, valuation vs peers, bull/bear case and risks — plus a chat box to ask follow-ups.</p>
             </div>
             <div>
               <div className="text-2xs text-accent-amber uppercase">How to enable</div>
-              <p className="text-xs text-term-gray">Add <span className="text-term-white">ANTHROPIC_API_KEY</span> to your <span className="text-term-white">.env</span> and restart the server. Get a key at <span className="text-accent-orange">console.anthropic.com</span>. AI calls bill against your Anthropic account.</p>
+              <p className="text-xs text-term-gray">Add <span className="text-term-white">DEEPSEEK_API_KEY</span> to your <span className="text-term-white">.env</span> and restart the server. Get a key at <span className="text-accent-orange">platform.deepseek.com</span>. AI calls bill against your DeepSeek account.</p>
             </div>
             <div>
               <div className="text-2xs text-accent-amber uppercase">Meanwhile</div>

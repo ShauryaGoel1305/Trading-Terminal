@@ -72,10 +72,11 @@ surface within seconds.
 > 90s server aggregation + 12s client polling gives a near-live feel safely.
 > The cadence is tunable in `server/src/newsEngine.ts` (`INTERVAL_MS`).
 
-### AI features (Claude)
+### AI features (DeepSeek)
 
-Two AI surfaces, both powered by the Anthropic API (Claude, default
-`claude-opus-4-8` with adaptive thinking) and **gated on `ANTHROPIC_API_KEY`**:
+Two AI surfaces, both powered by the DeepSeek API (OpenAI-compatible, default
+`deepseek-chat`, auto-upgrading to `deepseek-reasoner` for deeper analysis/chat)
+and **gated on `DEEPSEEK_API_KEY`**:
 
 - **`AI` — AI analyst** (per stock): assembles the company's fundamentals, 5-year
   financial statements, ownership, peers and recent news, then generates a
@@ -85,12 +86,11 @@ Two AI surfaces, both powered by the Anthropic API (Claude, default
 - **`N` → ✦ AI Summary**: summarises the currently-displayed news feed (or a
   per-stock / per-player slice) into TL;DR, key themes, notable movers and tone.
 
-Without a key, both show a clear "AI disabled — set `ANTHROPIC_API_KEY`" notice
-and **every other feature works unchanged**. The server streams responses
-internally (so long analyses don't time out) and caches the system prompt.
-AI calls bill against your Anthropic account; set `ANTHROPIC_MODEL=claude-sonnet-4-6`
-(or `claude-haiku-4-5`) in `.env` for lower cost. Output is AI-generated from
-public data, **not financial advice**.
+Without a key, both show a clear "AI disabled — set `DEEPSEEK_API_KEY`" notice
+and **every other feature works unchanged**. AI calls bill against your DeepSeek
+account (their pricing is significantly cheaper than OpenAI/Anthropic); optionally
+set `DEEPSEEK_MODEL` / `DEEPSEEK_REASONER_MODEL` in `.env` to override the
+defaults. Output is AI-generated from public data, **not financial advice**.
 
 ### Functions
 
@@ -107,7 +107,7 @@ public data, **not financial advice**.
 | | `HP` | Historical daily prices (OHLCV) with day-over-day % change |
 | | `GP` | Advanced charting: candles, volume, SMA/EMA/Bollinger, RSI & MACD panes, multi-security compare |
 | | `SIG` | **Trade signals dashboard** — composite buy/sell verdict from technicals (trend, MA crosses, RSI, MACD, Bollinger, 52W position) + analyst consensus, valuation/quality stats, key levels (ATR stop), and an interactive risk/reward + position-size calculator |
-| | `AI` | **AI analyst (Claude)** — generated investment brief (business, strategy, 5-yr financials, who's buying, valuation vs peers, bull/bear, risks) + a chat box to ask follow-ups. Requires `ANTHROPIC_API_KEY` |
+| | `AI` | **AI analyst (DeepSeek)** — generated investment brief (business, strategy, 5-yr financials, who's buying, valuation vs peers, bull/bear, risks) + a chat box to ask follow-ups. Requires `DEEPSEEK_API_KEY` |
 | | `FA` | Financial statements (income, balance sheet, cash flow) — annual & quarterly |
 | | `EE` | Analyst ratings, price targets, earnings history & forward estimates |
 | | `OWN` | Institutional holders, ownership breakdown, insider transactions |

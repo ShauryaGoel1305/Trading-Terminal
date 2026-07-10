@@ -61,7 +61,7 @@ app.listen(PORT, () => {
   console.log(`\n  ▌ Bloomberg Terminal API listening on http://localhost:${PORT}`);
   console.log(`  ▌ Finnhub key: ${process.env.FINNHUB_API_KEY ? "set" : "NOT set (using multi-source RSS for news)"}`);
   console.log(`  ▌ Alpha Vantage key: ${process.env.ALPHA_VANTAGE_API_KEY ? "set" : "NOT set (Yahoo only)"}`);
-  console.log(`  ▌ Anthropic key: ${process.env.ANTHROPIC_API_KEY ? `set (AI enabled, model ${process.env.ANTHROPIC_MODEL || "claude-opus-4-8"})` : "NOT set (AI features disabled)"}\n`);
+  console.log(`  ▌ DeepSeek key: ${process.env.DEEPSEEK_API_KEY ? `set (AI enabled, model ${process.env.DEEPSEEK_MODEL || "deepseek-chat"})` : "NOT set (AI features disabled)"}\n`);
   // Start the background news aggregator (multi-source, 90s cadence).
   startNews().catch((e) => console.error("News engine failed to start:", e?.message));
 });

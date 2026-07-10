@@ -58,7 +58,7 @@ export const FUNCTIONS: FunctionDef[] = [
   { code: "DFLT", label: "Defaults & Settings", group: "Monitor", category: "Core & Navigation", status: "none", desc: "User preferences & terminal settings" },
 
   // ── AI & Assistant ───────────────────────────────────────────────────
-  { code: "AI", label: "AI Analyst", group: "Security", category: "AI & Assistant", security: true, status: "live", pinned: true, desc: "AI equity analysis & chat — what it does, financials, who's buying, bull/bear (Claude)" },
+  { code: "AI", label: "AI Analyst", group: "Security", category: "AI & Assistant", security: true, status: "live", pinned: true, desc: "AI equity analysis & chat — what it does, financials, who's buying, bull/bear (DeepSeek)" },
 
   // ── Equity Analysis ─────────────────────────────────────────────────
   { code: "DES", label: "Description", group: "Security", category: "Equity Analysis", security: true, status: "live", pinned: true, desc: "Company profile, business & key stats" },

@@ -96,7 +96,7 @@ export const api = {
   curve: () => get<YieldCurve>("/curve"),
   health: () => get<{ ok: boolean; finnhub: boolean; alphaVantage: boolean; ai: boolean }>("/health"),
 
-  // ── AI (Claude) ──────────────────────────────────────────────────────
+  // ── AI (DeepSeek) ────────────────────────────────────────────────────
   aiStatus: () => get<{ enabled: boolean; model: string }>("/ai/status"),
   aiNewsSummary: (opts: { symbol?: string; category?: string; type?: string; topic?: string }) =>
     post<{ text: string }>("/ai/news-summary", opts),

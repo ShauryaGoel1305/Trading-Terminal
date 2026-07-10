@@ -10,7 +10,7 @@
     "start": "cross-env NODE_ENV=production node dist/index.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.100.1",
+    "openai": "^6.46.0",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
