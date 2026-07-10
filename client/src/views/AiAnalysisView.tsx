@@ -39,31 +39,41 @@ async function buildBundle(symbol: string) {
   return bundle;
 }
 
+const SUGGESTIONS = (symbol: string) => [
+  { label: "📊 Full investment brief", isBrief: true, prompt: "" },
+  { label: "💰 Is the balance sheet healthy?", isBrief: false, prompt: `Is ${symbol}'s balance sheet healthy? Walk through leverage, liquidity and any red flags.` },
+  { label: "⚖️ Bull case vs bear case", isBrief: false, prompt: `Give me the strongest bull case and bear case for ${symbol}.` },
+  { label: "🏁 How does it compare to peers?", isBrief: false, prompt: `How does ${symbol} compare to its closest peers on valuation and growth?` },
+];
+
 export function AiAnalysisView({ symbol }: { symbol: string }) {
   const status = usePolling(() => api.aiStatus(), 0, []);
   const enabled = status.data?.enabled;
 
-  const [analysis, setAnalysis] = useState<string>("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const [chat, setChat] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
-  const [chatBusy, setChatBusy] = useState(false);
+  const [busy, setBusy] = useState(false);
   const bundleRef = useRef<{ symbol: string; data: Record<string, unknown> } | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Reset when the symbol changes.
+  // Reset the conversation when the symbol changes.
   useEffect(() => {
-    setAnalysis("");
-    setError(null);
     setChat([]);
     bundleRef.current = null;
   }, [symbol]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat, chatBusy]);
+  }, [chat, busy]);
+
+  // Auto-grow the input up to a max height, then scroll internally.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
+  }, [input]);
 
   async function ensureBundle() {
     if (bundleRef.current?.symbol === symbol) return bundleRef.current.data;
@@ -72,36 +82,54 @@ export function AiAnalysisView({ symbol }: { symbol: string }) {
     return data;
   }
 
-  async function generate() {
-    setBusy(true);
-    setError(null);
-    try {
-      const data = await ensureBundle();
-      const { text } = await api.aiAnalyze(symbol, data);
-      setAnalysis(text);
-    } catch (e: any) {
-      setError(e?.message ?? "Analysis failed");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function sendChat(e: React.FormEvent) {
-    e.preventDefault();
-    const q = input.trim();
-    if (!q || chatBusy) return;
+  async function send(text: string) {
+    const q = text.trim();
+    if (!q || busy) return;
     setInput("");
     const next = [...chat, { role: "user" as const, content: q }];
     setChat(next);
-    setChatBusy(true);
+    setBusy(true);
     try {
       const data = await ensureBundle();
-      const { text } = await api.aiChat({ symbol, context: data, messages: next });
-      setChat([...next, { role: "assistant", content: text }]);
+      const { text: reply } = await api.aiChat({ symbol, context: data, messages: next });
+      setChat([...next, { role: "assistant", content: reply }]);
     } catch (e: any) {
       setChat([...next, { role: "assistant", content: `⚠ ${e?.message ?? "Request failed"}` }]);
     } finally {
-      setChatBusy(false);
+      setBusy(false);
+      inputRef.current?.focus();
+    }
+  }
+
+  // The "full brief" quick action uses the dedicated /ai/analyze endpoint
+  // (structured investment-brief prompt) instead of the general chat prompt,
+  // but still renders into the same conversation feed.
+  async function sendFullBrief() {
+    if (busy) return;
+    const next = [...chat, { role: "user" as const, content: `Give me a full investment brief on ${symbol}.` }];
+    setChat(next);
+    setBusy(true);
+    try {
+      const data = await ensureBundle();
+      const { text } = await api.aiAnalyze(symbol, data);
+      setChat([...next, { role: "assistant", content: text }]);
+    } catch (e: any) {
+      setChat([...next, { role: "assistant", content: `⚠ ${e?.message ?? "Analysis failed"}` }]);
+    } finally {
+      setBusy(false);
+      inputRef.current?.focus();
+    }
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    send(input);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send(input);
     }
   }
 
@@ -119,11 +147,11 @@ export function AiAnalysisView({ symbol }: { symbol: string }) {
           <div className="max-w-md space-y-3 text-left">
             <div>
               <div className="text-2xs text-accent-amber uppercase">What this is</div>
-              <p className="text-xs text-term-white">An AI equity analyst (powered by Claude) that explains what the company does, its strategy, 5-year financial trajectory, who's buying it, valuation vs peers, bull/bear case and risks — plus a chat box to ask follow-ups.</p>
+              <p className="text-xs text-term-white">An AI equity analyst (powered by DeepSeek) that explains what the company does, its strategy, 5-year financial trajectory, who's buying it, valuation vs peers, bull/bear case and risks — through a chat interface.</p>
             </div>
             <div>
               <div className="text-2xs text-accent-amber uppercase">How to enable</div>
-              <p className="text-xs text-term-gray">Add <span className="text-term-white">ANTHROPIC_API_KEY</span> to your <span className="text-term-white">.env</span> and restart the server. Get a key at <span className="text-accent-orange">console.anthropic.com</span>. AI calls bill against your Anthropic account.</p>
+              <p className="text-xs text-term-gray">Add <span className="text-term-white">DEEPSEEK_API_KEY</span> to your <span className="text-term-white">.env</span> and restart the server. Get a key at <span className="text-accent-orange">platform.deepseek.com</span>. AI calls bill against your DeepSeek account.</p>
             </div>
             <div>
               <div className="text-2xs text-accent-amber uppercase">Meanwhile</div>
@@ -136,67 +164,113 @@ export function AiAnalysisView({ symbol }: { symbol: string }) {
   }
 
   return (
-    <div className="h-full grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-px bg-term-border">
-      {/* Analysis */}
-      <Panel
-        title={`AI Analyst · ${symbol}`}
-        subtitle={status.data?.model}
-        right={
+    <Panel
+      title={`AI Analyst · ${symbol}`}
+      subtitle={status.data?.model}
+      right={
+        chat.length > 0 ? (
           <button
-            onClick={generate}
+            onClick={() => setChat([])}
             disabled={busy}
-            className="text-2xs px-2 py-0.5 border border-accent-orange text-accent-orange hover:bg-accent-orange hover:text-black disabled:opacity-50"
+            className="text-2xs px-2 py-0.5 border border-term-border text-term-gray hover:border-accent-orange hover:text-accent-orange disabled:opacity-40"
           >
-            {busy ? "Analysing…" : analysis ? "↻ Regenerate" : "✦ Generate Analysis"}
+            ↻ New chat
           </button>
-        }
-        className="min-h-0"
-      >
-        <div className="p-2">
-          {error && <div className="badge-error mb-2">{error}</div>}
-          {busy && !analysis && (
-            <div className="text-2xs text-term-gray mb-2">Reading fundamentals, 5y financials, ownership, peers & news, then reasoning… (this can take ~20-40s)</div>
-          )}
-          {busy && !analysis && <SkeletonRows rows={12} cols={1} />}
-          {!busy && !analysis && !error && (
-            <div className="text-xs text-term-gray">
-              Click <span className="text-accent-orange">✦ Generate Analysis</span> for an AI investment brief on {symbol}: what it does, strategy, 5-year financials, who's buying, valuation vs peers, bull/bear case, risks and a bottom line.
+        ) : undefined
+      }
+      className="h-full"
+      bodyClassName="flex flex-col p-0 min-h-0"
+    >
+      <div className="flex-1 overflow-auto px-3 sm:px-6 py-4 space-y-4">
+        {chat.length === 0 && (
+          <div className="h-full flex flex-col items-center justify-center text-center gap-5 py-8">
+            <div className="w-12 h-12 rounded-full border border-accent-orange flex items-center justify-center text-accent-orange text-xl">✦</div>
+            <div>
+              <div className="text-term-white text-sm tracking-wide">AI Analyst · {symbol}</div>
+              <p className="text-xs text-term-gray max-w-md mt-2">
+                Ask anything about {symbol} — fundamentals, financials, ownership, valuation vs peers, or recent news.
+                Answers are grounded in live terminal data where available.
+              </p>
             </div>
-          )}
-          {analysis && <Markdown text={analysis} />}
-        </div>
-      </Panel>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg w-full">
+              {SUGGESTIONS(symbol).map((s) => (
+                <button
+                  key={s.label}
+                  onClick={() => (s.isBrief ? sendFullBrief() : send(s.prompt))}
+                  className="text-left text-2xs px-3 py-2 border border-term-border bg-bg-secondary hover:border-accent-orange hover:text-accent-orange transition-colors"
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
-      {/* Chat */}
-      <Panel title="Ask the Analyst" subtitle={symbol} className="min-h-0" bodyClassName="flex flex-col">
-        <div className="flex-1 overflow-auto p-2 space-y-2">
-          {chat.length === 0 && (
-            <div className="text-2xs text-term-gray">
-              Ask anything about {symbol} — e.g. "Is the balance sheet healthy?", "Why did revenue grow?", "What are the biggest risks?", "How does it compare to peers?"
-            </div>
-          )}
-          {chat.map((m, i) => (
-            <div key={i} className={m.role === "user" ? "text-right" : ""}>
-              <div className={`inline-block max-w-[95%] text-left px-2 py-1 ${m.role === "user" ? "bg-bg-header text-term-white" : "bg-bg-secondary"}`}>
-                {m.role === "user" ? <span className="text-xs">{m.content}</span> : <Markdown text={m.content} />}
-              </div>
-            </div>
-          ))}
-          {chatBusy && <div className="text-2xs text-term-gray">Thinking…</div>}
-          <div ref={chatEndRef} />
+        {chat.map((m, i) => (
+          <ChatBubble key={i} role={m.role} content={m.content} />
+        ))}
+
+        {busy && <TypingBubble />}
+        <div ref={chatEndRef} />
+      </div>
+
+      <form onSubmit={handleSubmit} className="border-t border-term-border p-2 flex items-end gap-2 bg-bg-panel">
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={1}
+          placeholder={`Message the AI analyst about ${symbol}… (Enter to send, Shift+Enter for newline)`}
+          className="flex-1 resize-none bg-black border border-term-border focus-ring px-3 py-2 text-xs text-term-white placeholder:text-term-gray max-h-32 overflow-auto"
+        />
+        <button
+          type="submit"
+          disabled={busy || !input.trim()}
+          className="px-4 py-2 text-2xs uppercase tracking-wide border border-accent-orange text-accent-orange hover:bg-accent-orange hover:text-black disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-accent-orange transition-colors"
+        >
+          Send
+        </button>
+      </form>
+    </Panel>
+  );
+}
+
+function ChatBubble({ role, content }: { role: "user" | "assistant"; content: string }) {
+  const isUser = role === "user";
+  return (
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+      <div className={`flex gap-2 max-w-[90%] sm:max-w-[75%] ${isUser ? "flex-row-reverse" : ""}`}>
+        <div
+          className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-2xs font-bold ${
+            isUser ? "bg-accent-orange text-black" : "bg-bg-header text-accent-amber border border-term-border"
+          }`}
+        >
+          {isUser ? "U" : "✦"}
         </div>
-        <form onSubmit={sendChat} className="flex border-t border-term-border">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={`Ask about ${symbol}…`}
-            className="flex-1 bg-black px-2 py-1.5 text-xs text-term-white focus:outline-none"
-          />
-          <button type="submit" disabled={chatBusy} className="px-3 text-2xs text-accent-orange hover:bg-bg-secondary disabled:opacity-50 uppercase">
-            Send
-          </button>
-        </form>
-      </Panel>
+        <div
+          className={`px-3 py-2 rounded-md text-left ${
+            isUser ? "bg-bg-header text-term-white text-xs" : "bg-bg-secondary border border-term-border"
+          }`}
+        >
+          {isUser ? <span className="whitespace-pre-wrap">{content}</span> : <Markdown text={content} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TypingBubble() {
+  return (
+    <div className="flex justify-start">
+      <div className="flex gap-2 max-w-[75%]">
+        <div className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-2xs font-bold bg-bg-header text-accent-amber border border-term-border">✦</div>
+        <div className="px-3 py-2.5 rounded-md bg-bg-secondary border border-term-border flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-term-gray animate-bounce [animation-delay:-0.3s]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-term-gray animate-bounce [animation-delay:-0.15s]" />
+          <span className="w-1.5 h-1.5 rounded-full bg-term-gray animate-bounce" />
+        </div>
+      </div>
     </div>
   );
 }

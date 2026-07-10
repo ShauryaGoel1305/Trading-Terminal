@@ -69,11 +69,45 @@ function StatusBar({ symbol, view }: { symbol: string; view: FunctionCode }) {
   );
 }
 
+const VIEW_STATE_KEYS = { symbol: "bbg.lastSymbol", view: "bbg.lastView" };
+
 function Terminal() {
   const { addToWatchlist } = useStore();
-  const [symbol, setSymbol] = useState("AAPL");
-  const [view, setView] = useState<FunctionCode>("DASH");
+  const [symbol, setSymbol] = useState(() => {
+    try {
+      return localStorage.getItem(VIEW_STATE_KEYS.symbol) || "AAPL";
+    } catch {
+      return "AAPL";
+    }
+  });
+  const [view, setView] = useState<FunctionCode>(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_STATE_KEYS.view);
+      // Only restore it if it's still a real function code (guards against
+      // stale localStorage from an older build removing/renaming a code).
+      return saved && saved in FUNCTION_MAP ? saved : "DASH";
+    } catch {
+      return "DASH";
+    }
+  });
   useAlertMonitor();
+
+  // Persist the current symbol/view so a page refresh lands back where the
+  // user left off instead of resetting to the dashboard.
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_STATE_KEYS.symbol, symbol);
+    } catch {
+      /* ignore (e.g. private browsing storage quota) */
+    }
+  }, [symbol]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(VIEW_STATE_KEYS.view, view);
+    } catch {
+      /* ignore */
+    }
+  }, [view]);
 
   // Load a symbol and stay on the current view (used by watchlist/markets).
   const loadSymbol = useCallback((s: string) => {

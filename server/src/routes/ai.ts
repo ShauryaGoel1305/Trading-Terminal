@@ -1,6 +1,5 @@
 import { Router } from "express";
-import type { MessageParam } from "@anthropic-ai/sdk/resources/messages";
-import { aiEnabled, aiModel, callClaude, compactJson, AiDisabledError } from "../ai.js";
+import { aiEnabled, aiModel, callAI, compactJson, AiDisabledError, type ChatMessage } from "../ai.js";
 import { queryNews, fetchSymbolNews, type Article } from "../newsEngine.js";
 
 const router = Router();
@@ -52,7 +51,7 @@ router.post("/news-summary", async (req, res) => {
       "and **Overall tone** (bullish/bearish/mixed with one-line why). Be specific and concrete; do not invent facts beyond the headlines. " +
       DISCLAIMER;
 
-    const text = await callClaude({
+    const text = await callAI({
       system,
       maxTokens: 4000,
       think: false,
@@ -83,7 +82,7 @@ router.post("/analyze", async (req, res) => {
       "Do not fabricate data not present. Be decisive but balanced. Keep it skimmable. " +
       DISCLAIMER;
 
-    const text = await callClaude({
+    const text = await callAI({
       system,
       maxTokens: 9000,
       think: true,
@@ -112,7 +111,7 @@ router.post("/chat", async (req, res) => {
       "If you don't have the data, say so rather than guessing. " +
       DISCLAIMER;
 
-    const msgs: MessageParam[] = [];
+    const msgs: ChatMessage[] = [];
     if (context) {
       msgs.push({ role: "user", content: `Context data for ${String(symbol ?? "the security").toUpperCase()}:\n${compactJson(context, 16000)}` });
       msgs.push({ role: "assistant", content: "Understood — I have the context. What would you like to know?" });
@@ -123,7 +122,7 @@ router.post("/chat", async (req, res) => {
       }
     }
 
-    const text = await callClaude({ system, maxTokens: 4000, think: true, messages: msgs });
+    const text = await callAI({ system, maxTokens: 4000, think: true, messages: msgs });
     res.json({ text });
   } catch (err: any) {
     handleErr(res, err);

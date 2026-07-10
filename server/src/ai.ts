@@ -1,59 +1,68 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
-// Default to the most capable model; override with ANTHROPIC_MODEL if desired.
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-4-8";
+// DeepSeek exposes an OpenAI-compatible Chat Completions API at api.deepseek.com.
+// "deepseek-chat" (V3) is the fast/cheap default; "deepseek-reasoner" (R1) adds
+// native chain-of-thought reasoning and is used automatically for calls that
+// request `think: true` (deeper analysis / chat), mirroring the old
+// think-on/off toggle from the Anthropic version of this file.
+const CHAT_MODEL = process.env.DEEPSEEK_MODEL || "deepseek-chat";
+const REASONER_MODEL = process.env.DEEPSEEK_REASONER_MODEL || "deepseek-reasoner";
 
-let client: Anthropic | null = null;
-function getClient(): Anthropic | null {
-  if (!process.env.ANTHROPIC_API_KEY) return null;
-  if (!client) client = new Anthropic(); // reads ANTHROPIC_API_KEY from env
+let client: OpenAI | null = null;
+function getClient(): OpenAI | null {
+  if (!process.env.DEEPSEEK_API_KEY) return null;
+  if (!client) {
+    client = new OpenAI({
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      baseURL: "https://api.deepseek.com",
+    });
+  }
   return client;
 }
 
 export function aiEnabled(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY);
+  return Boolean(process.env.DEEPSEEK_API_KEY);
 }
 
 export function aiModel(): string {
-  return MODEL;
+  return CHAT_MODEL;
 }
 
 export class AiDisabledError extends Error {
   constructor() {
-    super("AI is disabled — set ANTHROPIC_API_KEY in the server environment.");
+    super("AI is disabled — set DEEPSEEK_API_KEY in the server environment.");
     this.name = "AiDisabledError";
   }
 }
 
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 interface CallOpts {
   system: string;
-  messages: Anthropic.MessageParam[];
+  messages: ChatMessage[];
   maxTokens?: number;
-  /** Adaptive thinking helps on analysis; turn off for short summaries. */
+  /** Route to DeepSeek's reasoning model (deepseek-reasoner) for deeper analysis. */
   think?: boolean;
 }
 
-// Single entry point. Streams server-side (via .finalMessage()) so large
-// outputs don't hit the SDK's non-streaming HTTP timeout, then returns the
-// concatenated text. Caches the (stable) system prompt prefix.
-export async function callClaude({ system, messages, maxTokens = 8000, think = true }: CallOpts): Promise<string> {
+// Single entry point. Keeps the same name/shape as the old Anthropic-backed
+// helper so the route handlers barely had to change.
+export async function callAI({ system, messages, maxTokens = 8000, think = true }: CallOpts): Promise<string> {
   const c = getClient();
   if (!c) throw new AiDisabledError();
 
-  const stream = c.messages.stream({
-    model: MODEL,
+  const model = think ? REASONER_MODEL : CHAT_MODEL;
+
+  const completion = await c.chat.completions.create({
+    model,
     max_tokens: maxTokens,
-    ...(think ? { thinking: { type: "adaptive" } } : {}),
-    system: [{ type: "text", text: system, cache_control: { type: "ephemeral" } }],
-    messages,
+    messages: [{ role: "system", content: system }, ...messages],
   });
 
-  const final = await stream.finalMessage();
-  return final.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("\n")
-    .trim();
+  return (completion.choices[0]?.message?.content ?? "").trim();
 }
 
 // Trim a JSON context payload so we don't blow the token budget on huge inputs.
