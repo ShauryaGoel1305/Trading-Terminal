@@ -1,6 +1,8 @@
 import "./env.js"; // must stay the first import — see env.ts for why
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import quote from "./routes/quote.js";
 import chart from "./routes/chart.js";
@@ -56,6 +58,18 @@ app.use("/api/dividends", dividends);
 app.use("/api", analytics);
 
 app.use("/api", (_req, res) => res.status(404).json({ error: "NOT_FOUND" }));
+
+// In production, serve the built client (client/dist) from this same
+// service so the client's relative `/api/*` fetch calls hit this server
+// with no CORS/cross-origin config needed — one Render Web Service does
+// both jobs. In dev, the separate Vite dev server + its /api proxy is used
+// instead, so this block is skipped.
+if (process.env.NODE_ENV === "production") {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const clientDist = path.resolve(__dirname, "../../client/dist");
+  app.use(express.static(clientDist));
+  app.get("*", (_req, res) => res.sendFile(path.join(clientDist, "index.html")));
+}
 
 app.listen(PORT, () => {
   console.log(`\n  ▌ Bloomberg Terminal API listening on http://localhost:${PORT}`);
