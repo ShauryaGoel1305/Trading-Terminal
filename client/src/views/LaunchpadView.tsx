@@ -17,9 +17,9 @@ export function LaunchpadView({ symbol, onSelect }: Props) {
 
   return (
     <main
-      className="h-full grid gap-px bg-term-border"
+      className="h-full grid gap-3 p-3 bg-transparent overflow-auto"
       style={{
-        gridTemplateColumns: "230px minmax(0, 1fr) 340px",
+        gridTemplateColumns: "240px minmax(0, 1fr) 340px",
         gridTemplateRows: "repeat(4, minmax(0, 1fr))",
         gridTemplateAreas: `
           "watch chart   quote"
@@ -29,7 +29,7 @@ export function LaunchpadView({ symbol, onSelect }: Props) {
         `,
       }}
     >
-      <div style={{ gridArea: "watch" }} className="min-h-0 [&>*]:h-full">
+      <div style={{ gridArea: "watch" }} className="min-h-0 [&>*]:h-full [&>*]:[animation-delay:0ms]">
         <WatchlistPanel
           symbols={watchlist}
           selected={symbol}
@@ -38,11 +38,11 @@ export function LaunchpadView({ symbol, onSelect }: Props) {
           onRemove={removeFromWatchlist}
         />
       </div>
-      <div style={{ gridArea: "chart" }} className="min-h-0 [&>*]:h-full"><ChartPanel symbol={symbol} /></div>
-      <div style={{ gridArea: "options" }} className="min-h-0 [&>*]:h-full"><OptionsChainPanel symbol={symbol} /></div>
-      <div style={{ gridArea: "quote" }} className="min-h-0 [&>*]:h-full"><QuoteDetailPanel symbol={symbol} /></div>
-      <div style={{ gridArea: "news" }} className="min-h-0 [&>*]:h-full"><NewsFeedPanel /></div>
-      <div style={{ gridArea: "calendar" }} className="min-h-0 [&>*]:h-full"><EconomicCalendarPanel symbol={symbol} /></div>
+      <div style={{ gridArea: "chart" }} className="min-h-0 [&>*]:h-full [&>*]:[animation-delay:60ms]"><ChartPanel symbol={symbol} /></div>
+      <div style={{ gridArea: "options" }} className="min-h-0 [&>*]:h-full [&>*]:[animation-delay:180ms]"><OptionsChainPanel symbol={symbol} /></div>
+      <div style={{ gridArea: "quote" }} className="min-h-0 [&>*]:h-full [&>*]:[animation-delay:120ms]"><QuoteDetailPanel symbol={symbol} /></div>
+      <div style={{ gridArea: "news" }} className="min-h-0 [&>*]:h-full [&>*]:[animation-delay:150ms]"><NewsFeedPanel /></div>
+      <div style={{ gridArea: "calendar" }} className="min-h-0 [&>*]:h-full [&>*]:[animation-delay:210ms]"><EconomicCalendarPanel symbol={symbol} /></div>
     </main>
   );
 }

@@ -64,7 +64,7 @@ export function Metric({
   valueClass?: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between px-2 py-1 border-b border-term-border/40 gap-2">
+    <div className="flex items-baseline justify-between px-2 py-1 border-b border-term-border/40 gap-2 transition-colors duration-200 hover:bg-white/[0.03]">
       <span className="text-2xs text-term-gray uppercase truncate">{label}</span>
       <span className={`num text-xs text-term-white ${valueClass}`}>{value}</span>
     </div>
@@ -74,7 +74,7 @@ export function Metric({
 // A section header bar inside a panel body.
 export function SectionHead({ title, right }: { title: string; right?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-2 py-1 bg-bg-secondary text-2xs uppercase tracking-wider text-accent-amber border-b border-term-border sticky top-0 z-10">
+    <div className="flex items-center justify-between px-2 py-1 bg-bg-secondary/90 backdrop-blur-sm text-2xs uppercase tracking-wider text-accent-amber border-b border-term-border sticky top-0 z-10">
       <span>{title}</span>
       {right}
     </div>

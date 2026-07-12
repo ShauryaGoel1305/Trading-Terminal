@@ -65,6 +65,61 @@ export async function callAI({ system, messages, maxTokens = 8000, think = true 
   return (completion.choices[0]?.message?.content ?? "").trim();
 }
 
+export interface ToolDef {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
+export interface ToolCallResult {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+export interface ChatToolResult {
+  text: string;
+  toolCall?: ToolCallResult;
+}
+
+interface CallChatOpts {
+  system: string;
+  messages: ChatMessage[];
+  maxTokens?: number;
+  tools?: ToolDef[];
+}
+
+// Open-ended chat entry point with optional function-calling ("tools"). Always
+// uses the fast chat model — DeepSeek's reasoning model doesn't support tool
+// calls, and a general chatbot doesn't need the extra latency anyway.
+export async function callAIChat({ system, messages, maxTokens = 3000, tools }: CallChatOpts): Promise<ChatToolResult> {
+  const c = getClient();
+  if (!c) throw new AiDisabledError();
+
+  const completion = await c.chat.completions.create({
+    model: CHAT_MODEL,
+    max_tokens: maxTokens,
+    messages: [{ role: "system", content: system }, ...messages],
+    ...(tools ? { tools, tool_choice: "auto" as const } : {}),
+  });
+
+  const msg = completion.choices[0]?.message;
+  const rawCall = msg?.tool_calls?.[0];
+  if (rawCall && rawCall.type === "function") {
+    let args: Record<string, unknown> = {};
+    try {
+      args = JSON.parse(rawCall.function.arguments || "{}");
+    } catch {
+      /* malformed tool args — ignore, fall back to no navigation */
+    }
+    return { text: (msg?.content ?? "").trim(), toolCall: { name: rawCall.function.name, arguments: args } };
+  }
+
+  return { text: (msg?.content ?? "").trim() };
+}
+
 // Trim a JSON context payload so we don't blow the token budget on huge inputs.
 export function compactJson(data: unknown, maxChars = 22000): string {
   let s: string;

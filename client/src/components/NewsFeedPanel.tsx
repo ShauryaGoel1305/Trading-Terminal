@@ -12,14 +12,14 @@ export function NewsFeedPanel() {
       {loading && !data ? (
         <SkeletonRows rows={8} cols={1} />
       ) : (
-        <ul className="divide-y divide-term-border/50">
+        <ul className="divide-y divide-term-border/40">
           {(data ?? []).map((n) => (
             <li key={n.id}>
               <a
                 href={n.url}
                 target="_blank"
                 rel="noreferrer"
-                className="block px-2 py-1.5 hover:bg-bg-secondary"
+                className="block px-2 py-1.5 transition-colors duration-150 hover:bg-white/[0.04] border-l-2 border-transparent hover:border-accent-orange"
               >
                 <div className="text-xs text-term-white leading-snug">{n.headline}</div>
                 <div className="flex justify-between text-2xs text-term-gray mt-0.5">

@@ -1,8 +1,44 @@
 import { Router } from "express";
-import { aiEnabled, aiModel, callAI, compactJson, AiDisabledError, type ChatMessage } from "../ai.js";
+import { aiEnabled, aiModel, callAI, callAIChat, compactJson, AiDisabledError, type ChatMessage, type ToolDef } from "../ai.js";
 import { queryNews, fetchSymbolNews, type Article } from "../newsEngine.js";
 
 const router = Router();
+
+// Function codes the AI is allowed to navigate the terminal to. Kept as a
+// curated allow-list (rather than every code in the client's function
+// catalogue) so the model can't send the UI to a code that doesn't exist.
+const NAV_CODES = [
+  "DASH", "DES", "FA", "AR", "CF", "EE", "OWN", "COMP", "GP", "SIG", "N", "CN",
+  "DVD", "BRC", "SI", "ESG", "ETF", "HVG", "BETA", "GF", "HP", "PORT", "RISK",
+  "TRADE", "YCRV", "ECO", "MKT", "WEI", "ALRT", "QUANT",
+] as const;
+
+const NAVIGATE_TOOL: ToolDef = {
+  type: "function",
+  function: {
+    name: "navigate",
+    description:
+      "Switch the trading terminal's main screen to show a specific function, optionally for a specific ticker. " +
+      "Use this whenever the user asks to see, open, pull up, or go to something — e.g. a company's annual report, " +
+      "financials, chart, news, ownership, dividends, ESG, or a general market screen. Only call this when the user " +
+      "is clearly asking to be shown or navigated somewhere, not for plain questions you can just answer in text.",
+    parameters: {
+      type: "object",
+      properties: {
+        symbol: {
+          type: "string",
+          description: "Ticker symbol, e.g. AAPL. Omit for symbol-independent codes like N, MKT, ECO, YCRV, WEI, QUANT.",
+        },
+        code: {
+          type: "string",
+          description: "Terminal function code to switch to.",
+          enum: NAV_CODES as unknown as string[],
+        },
+      },
+      required: ["code"],
+    },
+  },
+};
 
 const DISCLAIMER =
   "End with a one-line disclaimer: this is AI-generated analysis from public data, not financial advice.";
@@ -97,6 +133,11 @@ router.post("/analyze", async (req, res) => {
 });
 
 // POST /api/ai/chat { symbol?, context?, messages: [{role,content}] }
+// This is an open-ended chat endpoint — it is NOT locked to one ticker. `symbol`
+// / `context` (when present) are just a soft "here's what the user is
+// currently looking at" hint; the assistant is free to discuss any company or
+// topic the user brings up, and can call the `navigate` tool to move the
+// terminal's main screen to a ticker/function on the user's behalf.
 router.post("/chat", async (req, res) => {
   try {
     const { symbol, context, messages } = req.body ?? {};
@@ -105,10 +146,14 @@ router.post("/chat", async (req, res) => {
       return;
     }
     const system =
-      "You are a knowledgeable markets & investing assistant inside a trading terminal. " +
-      (symbol ? `The user is currently looking at ${String(symbol).toUpperCase()}. ` : "") +
-      "Answer concisely and concretely. When the user asks about the current stock, use the supplied context data. " +
-      "If you don't have the data, say so rather than guessing. " +
+      "You are an open-ended markets & investing assistant embedded in a trading terminal, similar to a general " +
+      "chatbot — you are not restricted to a single ticker and can discuss any company, sector, or market topic the " +
+      "user raises. " +
+      (symbol ? `For reference, the user currently has ${String(symbol).toUpperCase()} loaded in the terminal, and some data about it is attached below — use it when relevant, but feel free to discuss other tickers too. ` : "") +
+      "You have a `navigate` tool that switches the terminal's screen to a given function/ticker — call it whenever " +
+      "the user asks to see, open, or go to something (a report, chart, financials, news, etc.), then briefly confirm " +
+      "in your reply what you opened. Otherwise just answer directly and concisely. If you don't have real data for a " +
+      "claim, say so rather than guessing. " +
       DISCLAIMER;
 
     const msgs: ChatMessage[] = [];
@@ -122,8 +167,20 @@ router.post("/chat", async (req, res) => {
       }
     }
 
-    const text = await callAI({ system, maxTokens: 4000, think: true, messages: msgs });
-    res.json({ text });
+    const result = await callAIChat({ system, maxTokens: 3000, messages: msgs, tools: [NAVIGATE_TOOL] });
+
+    let navigate: { symbol?: string; code: string } | undefined;
+    let text = result.text;
+    if (result.toolCall?.name === "navigate") {
+      const code = String(result.toolCall.arguments.code ?? "").toUpperCase();
+      const sym = result.toolCall.arguments.symbol ? String(result.toolCall.arguments.symbol).toUpperCase() : undefined;
+      if (NAV_CODES.includes(code as (typeof NAV_CODES)[number])) {
+        navigate = { symbol: sym, code };
+        if (!text) text = `Opening ${code}${sym ? ` for ${sym}` : ""}…`;
+      }
+    }
+
+    res.json({ text, navigate });
   } catch (err: any) {
     handleErr(res, err);
   }

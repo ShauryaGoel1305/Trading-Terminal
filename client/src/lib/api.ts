@@ -102,7 +102,7 @@ export const api = {
     post<{ text: string }>("/ai/news-summary", opts),
   aiAnalyze: (symbol: string, data: unknown) => post<{ text: string }>("/ai/analyze", { symbol, data }),
   aiChat: (opts: { symbol?: string; context?: unknown; messages: { role: "user" | "assistant"; content: string }[] }) =>
-    post<{ text: string }>("/ai/chat", opts),
+    post<{ text: string; navigate?: { symbol?: string; code: string } }>("/ai/chat", opts),
 
   // ── SEC EDGAR filings ────────────────────────────────────────────────
   filings: (symbol: string) => get<FilingsResponse>(`/filings/${symbol}`),

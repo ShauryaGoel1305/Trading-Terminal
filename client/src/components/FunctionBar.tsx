@@ -1,5 +1,7 @@
 import { FUNCTIONS, type FunctionCode, type FuncGroup } from "../functions";
 
+// "Quant" is a top-level section (see SectionSwitcher), not a group shown
+// inline here, so it's intentionally excluded from this bar.
 const GROUP_ORDER: FuncGroup[] = ["Monitor", "Security", "Markets", "Portfolio"];
 
 const GROUP_COLOR: Record<FuncGroup, string> = {
@@ -8,6 +10,8 @@ const GROUP_COLOR: Record<FuncGroup, string> = {
   Markets: "#00b3ff",
   Portfolio: "#00ff41",
   Restricted: "#ff3333",
+  Quant: "#a855f7",
+  AI: "#22d3ee",
 };
 
 interface Props {
@@ -25,9 +29,9 @@ export function FunctionBar({ active, onSelect }: Props) {
       <button
         onClick={() => onSelect("FUNC")}
         title="FUNC — browse every terminal function"
-        className={`px-2 font-bold uppercase whitespace-nowrap border-r border-term-border ${
+        className={`px-2 font-bold uppercase whitespace-nowrap border-r border-term-border transition-all duration-200 ${
           active === "FUNC" || active === "MENU"
-            ? "bg-accent-orange text-black"
+            ? "bg-accent-orange text-black shadow-glow-orange"
             : "text-accent-amber hover:bg-bg-secondary"
         }`}
       >
@@ -45,9 +49,9 @@ export function FunctionBar({ active, onSelect }: Props) {
                 key={f.code}
                 onClick={() => onSelect(f.code)}
                 title={`${f.code} — ${f.desc}`}
-                className={`px-1.5 py-0.5 font-semibold uppercase whitespace-nowrap ${
+                className={`px-1.5 py-0.5 font-semibold uppercase whitespace-nowrap rounded-sm transition-all duration-200 ${
                   active === f.code
-                    ? "bg-accent-orange text-black"
+                    ? "bg-accent-orange text-black shadow-glow-orange"
                     : "text-term-gray hover:text-term-white hover:bg-bg-secondary"
                 }`}
               >

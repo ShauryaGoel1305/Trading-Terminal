@@ -9,7 +9,7 @@
 // function directory) or the command bar.
 export type FunctionCode = string;
 export type FuncStatus = "live" | "none";
-export type FuncGroup = "Monitor" | "Security" | "Markets" | "Portfolio" | "Restricted";
+export type FuncGroup = "Monitor" | "Security" | "Markets" | "Portfolio" | "Restricted" | "Quant" | "AI";
 
 export interface FunctionDef {
   code: FunctionCode;
@@ -47,6 +47,7 @@ export const CATEGORY_ORDER: string[] = [
   "M&A & Corporate Actions",
   "Industry & Sectors",
   "Tools & Messaging",
+  "Quant & Algo Trading",
 ];
 
 export const FUNCTIONS: FunctionDef[] = [
@@ -58,7 +59,7 @@ export const FUNCTIONS: FunctionDef[] = [
   { code: "DFLT", label: "Defaults & Settings", group: "Monitor", category: "Core & Navigation", status: "none", desc: "User preferences & terminal settings" },
 
   // ── AI & Assistant ───────────────────────────────────────────────────
-  { code: "AI", label: "AI Analyst", group: "Security", category: "AI & Assistant", security: true, status: "live", pinned: true, desc: "AI equity analysis & chat — what it does, financials, who's buying, bull/bear (DeepSeek)" },
+  { code: "AI", label: "AI Analyst", group: "AI", category: "AI & Assistant", status: "live", desc: "Open-ended AI chat — ask about any ticker or the market, get analysis, and navigate the terminal by asking (DeepSeek)" },
 
   // ── Equity Analysis ─────────────────────────────────────────────────
   { code: "DES", label: "Description", group: "Security", category: "Equity Analysis", security: true, status: "live", pinned: true, desc: "Company profile, business & key stats" },
@@ -233,6 +234,11 @@ export const FUNCTIONS: FunctionDef[] = [
   { code: "PEOP", label: "People", group: "Monitor", category: "Tools & Messaging", status: "none", desc: "Contacts & people directory" },
   { code: "GRAB", label: "Screen Grab", group: "Monitor", category: "Tools & Messaging", status: "none", desc: "Capture & share a screen" },
   { code: "CALC", label: "Calculators", group: "Monitor", category: "Tools & Messaging", status: "none", desc: "Financial calculators", alt: "A bond price/yield/duration calculator is in YCRV." },
+
+  // ── Quant & Algo Trading ─────────────────────────────────────────────
+  // Roadmap teaser only — no algorithm logic yet. Rendered by QuantView as a
+  // "coming soon" preview grid, not wired to any stub/live data path.
+  { code: "QUANT", label: "Quant Lab", group: "Quant", category: "Quant & Algo Trading", status: "live", pinned: true, desc: "Strategy backtesting, signal screening & systematic research — roadmap" },
 ];
 
 export const FUNCTION_CODES = FUNCTIONS.map((f) => f.code);

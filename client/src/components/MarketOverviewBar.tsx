@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useMarketData } from "../hooks/useMarketData";
 import { LiveIndicator } from "./ui";
 import { fmtPrice, fmtPct, trendClass } from "../lib/format";
@@ -15,8 +16,27 @@ const TICKERS: { symbol: string; label: string }[] = [
 function Cell({ label, quote }: { label: string; quote?: Quote }) {
   const cls = trendClass(quote?.changePercent);
   const arrow = quote?.changePercent == null ? "" : quote.changePercent > 0 ? "▲" : quote.changePercent < 0 ? "▼" : "";
+
+  // Flash the price briefly whenever it actually changes, so the strip feels
+  // alive rather than just silently repainting on each poll.
+  const prevPrice = useRef(quote?.price);
+  const [flash, setFlash] = useState<"up" | "down" | null>(null);
+  useEffect(() => {
+    if (quote?.price != null && prevPrice.current != null && quote.price !== prevPrice.current) {
+      setFlash(quote.price > prevPrice.current ? "up" : "down");
+      const id = setTimeout(() => setFlash(null), 900);
+      prevPrice.current = quote.price;
+      return () => clearTimeout(id);
+    }
+    prevPrice.current = quote?.price;
+  }, [quote?.price]);
+
   return (
-    <div className="flex items-baseline gap-2 px-3 border-r border-term-border whitespace-nowrap">
+    <div
+      className={`flex items-baseline gap-2 px-3 border-r border-term-border whitespace-nowrap transition-colors ${
+        flash === "up" ? "animate-flash-up" : flash === "down" ? "animate-flash-down" : ""
+      }`}
+    >
       <span className="text-2xs text-accent-amber font-semibold">{label}</span>
       {quote && !quote.error ? (
         <>

@@ -58,25 +58,25 @@ export function WatchlistPanel({ symbols, selected, onSelect, onAdd, onRemove }:
       error={!!error && !data}
       bodyClassName="flex flex-col"
     >
-      <form onSubmit={submitAdd} className="flex border-b border-term-border">
+      <form onSubmit={submitAdd} className="flex border-b border-term-border/70 bg-black/20">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="+ ADD TICKER"
           spellCheck={false}
           autoComplete="off"
-          className="flex-1 bg-black px-2 py-1 text-xs text-term-white uppercase
+          className="flex-1 bg-transparent px-2 py-1.5 text-xs text-term-white uppercase
                      placeholder:text-term-gray focus:outline-none"
         />
         <button
           type="submit"
-          className="px-2 text-2xs font-bold text-accent-orange hover:bg-bg-header border-l border-term-border"
+          className="px-2.5 text-2xs font-bold text-accent-orange hover:bg-accent-orange/10 border-l border-term-border/70 transition-colors duration-150"
         >
           ADD
         </button>
       </form>
 
-      <div className="grid grid-cols-[1fr_auto_auto] gap-x-2 px-2 py-1 text-2xs text-term-gray uppercase border-b border-term-border">
+      <div className="grid grid-cols-[1fr_auto_auto] gap-x-2 px-2 py-1 text-2xs text-term-gray uppercase border-b border-term-border/70">
         <span>Symbol</span>
         <span className="text-right">Last</span>
         <span className="text-right">Chg%</span>
@@ -129,8 +129,12 @@ function Row({
     <div
       data-symbol={symbol}
       onClick={onSelect}
-      className={`group grid grid-cols-[1fr_auto_auto] items-center gap-x-2 px-2 py-1 cursor-pointer
-        border-l-2 ${selected ? "border-accent-orange bg-bg-header" : "border-transparent hover:bg-bg-secondary"}`}
+      className={`group grid grid-cols-[1fr_auto_auto] items-center gap-x-2 px-2 py-1.5 cursor-pointer
+        border-l-2 transition-colors duration-150 ${
+          selected
+            ? "border-accent-orange bg-accent-orange/[0.08]"
+            : "border-transparent hover:bg-white/[0.04]"
+        }`}
     >
       <div className="flex items-center gap-1 min-w-0">
         <span className="text-xs font-semibold text-term-white truncate">{symbol}</span>

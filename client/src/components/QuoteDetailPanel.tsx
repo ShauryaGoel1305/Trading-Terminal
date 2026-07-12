@@ -17,7 +17,7 @@ interface Props {
 
 function Stat({ label, value, valueClass = "" }: { label: string; value: string; valueClass?: string }) {
   return (
-    <div className="flex items-baseline justify-between px-2 py-1 border-b border-term-border/50">
+    <div className="flex items-baseline justify-between px-2 py-1 border-b border-term-border/40 transition-colors duration-150 hover:bg-white/[0.03]">
       <span className="text-2xs text-term-gray uppercase">{label}</span>
       <span className={`num text-xs text-term-white ${valueClass}`}>{value}</span>
     </div>
