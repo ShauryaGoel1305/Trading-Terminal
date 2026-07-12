@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CommandBar } from "./components/CommandBar";
 import { FunctionBar } from "./components/FunctionBar";
 import { MarketOverviewBar } from "./components/MarketOverviewBar";
@@ -123,13 +123,11 @@ function Terminal() {
   // function automatically routes there.
   const section: Section =
     FUNCTION_MAP[view]?.group === "Quant" ? "quant" : FUNCTION_MAP[view]?.group === "AI" ? "ai" : "dashboard";
-  const lastDashboardView = useRef<FunctionCode>("DASH");
-  useEffect(() => {
-    const g = FUNCTION_MAP[view]?.group;
-    if (g !== "Quant" && g !== "AI") lastDashboardView.current = view;
-  }, [view]);
+  // Clicking a section tab always jumps to that section's home screen — it's
+  // a "go to Dashboard" action, not "restore whatever I was last looking at"
+  // (that's what the localStorage refresh-persistence above is for).
   const selectSection = useCallback(
-    (s: Section) => setView(s === "quant" ? "QUANT" : s === "ai" ? "AI" : lastDashboardView.current),
+    (s: Section) => setView(s === "quant" ? "QUANT" : s === "ai" ? "AI" : "DASH"),
     []
   );
 

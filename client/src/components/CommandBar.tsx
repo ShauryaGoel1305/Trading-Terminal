@@ -127,8 +127,22 @@ export function CommandBar({ onExecute }: Props) {
 
   return (
     <div className="px-3 pt-2.5 pb-1.5 bg-transparent">
+      {/* Full-viewport dim scrim behind the suggestion dropdown — fixed
+          positioning (not nested in any transformed/filtered ancestor) so it
+          reliably covers the whole dashboard regardless of DOM nesting, and
+          sits below the pill/dropdown's own elevated stacking context. */}
+      {showDropdown && (
+        <div
+          className="fixed inset-0 z-40 bg-black/70 animate-fade-in"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setOpen(false);
+          }}
+          aria-hidden="true"
+        />
+      )}
       <div
-        className={`relative flex items-center h-10 rounded-full border bg-bg-panel/70 backdrop-blur-md px-3 transition-all duration-300 ${
+        className={`relative z-50 flex items-center h-10 rounded-full border bg-bg-panel/95 backdrop-blur-md px-3 transition-all duration-300 ${
           showDropdown ? "border-accent-orange shadow-glow-orange" : "border-term-border hover:border-term-gray"
         }`}
       >

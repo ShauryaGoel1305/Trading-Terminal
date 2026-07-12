@@ -1,16 +1,20 @@
 import { useCallback, useRef, useState } from "react";
 import { api } from "../lib/api";
 import { buildAiBundle } from "../lib/aiBundle";
-import { FUNCTION_MAP, type FunctionCode } from "../functions";
+import { FUNCTION_CODES, FUNCTION_MAP, type FunctionCode } from "../functions";
 
 export type ChatMsg = { role: "user" | "assistant"; content: string };
 
 // Words that are all-caps but are essentially never what the user means when
 // they type them mid-sentence — kept short and terminal-specific rather than
-// trying to be an exhaustive dictionary.
+// trying to be an exhaustive dictionary. Also excludes every terminal
+// function code (AR, CF, FA, DES, GP, ...) — without this, a message like
+// "show me the AR for MSFT" would misdetect "AR" as the ticker (since it's
+// the first all-caps token) instead of "MSFT".
 const CAPS_BLOCKLIST = new Set([
   "I", "A", "THE", "IS", "IT", "OK", "AI", "ESG", "ETF", "CEO", "CFO", "IPO",
   "GDP", "CPI", "EPS", "USD", "EUR", "GBP", "PE", "Q1", "Q2", "Q3", "Q4",
+  ...FUNCTION_CODES,
 ]);
 
 // Very lightweight ticker sniffing: look for a 1-5 letter all-caps token in
