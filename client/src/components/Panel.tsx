@@ -20,7 +20,7 @@ export function Panel({
   className = "",
 }: PanelProps) {
   return (
-    <section className={`panel ${className}`}>
+    <section className={`panel-glass animate-fade-in-up ${className}`}>
       <header className="panel-header">
         <div className="flex items-center gap-2 min-w-0">
           <span className="truncate">{title}</span>

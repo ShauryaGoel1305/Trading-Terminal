@@ -42,7 +42,16 @@
       "Bash(xargs kill -9)",
       "Bash(lsof -ti:5173)",
       "Bash(mkdir -p \"/Users/shauryagoel/Documents/Portfolio Tracker\")",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Skill(code-review)",
+      "Bash(find . -maxdepth 3 -iname \"CLAUDE.md\" -not -path \"*/node_modules/*\")",
+      "Bash(ls ~/.claude/CLAUDE.md)",
+      "Bash(node -e ' *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Skill(run)",
+      "Bash(git fetch *)",
+      "Bash(git rev-list *)"
     ]
   }
 }

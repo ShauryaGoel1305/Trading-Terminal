@@ -104,9 +104,20 @@ export function CommandBar({ onExecute }: Props) {
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (open && suggestions[active]) choose(suggestions[active]);
-      else {
-        const { symbol, code } = parseCommand(value);
+      const parsed = parseCommand(value);
+      // A fully-typed "TICKER CODE" command is unambiguous — honor it
+      // directly rather than whatever the dropdown happens to have
+      // highlighted (a loose substring match against every function's code
+      // AND label, which can rank an unrelated function above the exact
+      // code the user actually typed, e.g. "FA" substring-matching DFLT's
+      // "Defaults & Settings" label).
+      if (parsed.symbol && parsed.code) {
+        onExecute(parsed.symbol, parsed.code);
+        reset();
+      } else if (open && suggestions[active]) {
+        choose(suggestions[active]);
+      } else {
+        const { symbol, code } = parsed;
         if (symbol || code) onExecute(symbol, code);
         reset();
       }
@@ -126,7 +137,26 @@ export function CommandBar({ onExecute }: Props) {
   const hint = parsed.code ? FUNCTION_MAP[parsed.code]?.label : undefined;
 
   return (
-    <div className="relative flex items-center h-9 bg-black border-b border-term-border px-2">
+    <div className="px-3 pt-2.5 pb-1.5 bg-transparent">
+      {/* Full-viewport dim scrim behind the suggestion dropdown — fixed
+          positioning (not nested in any transformed/filtered ancestor) so it
+          reliably covers the whole dashboard regardless of DOM nesting, and
+          sits below the pill/dropdown's own elevated stacking context. */}
+      {showDropdown && (
+        <div
+          className="fixed inset-0 z-40 bg-black/70 animate-fade-in"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            setOpen(false);
+          }}
+          aria-hidden="true"
+        />
+      )}
+      <div
+        className={`relative z-50 flex items-center h-10 rounded-full border bg-bg-panel/95 backdrop-blur-md px-3 transition-all duration-300 ${
+          showDropdown ? "border-accent-orange shadow-glow-orange" : "border-term-border hover:border-term-gray"
+        }`}
+      >
       <span className="text-accent-orange font-bold text-sm mr-2 select-none">{">"}</span>
       <input
         ref={inputRef}
@@ -140,17 +170,17 @@ export function CommandBar({ onExecute }: Props) {
         placeholder='TICKER + FUNCTION (e.g. "AAPL FA")  ·  press <GO>  ·  "/" to focus'
         className="flex-1 bg-transparent text-term-white text-sm placeholder:text-term-gray focus:outline-none uppercase tracking-wide"
       />
-      {hint && <span className="text-2xs text-accent-amber mr-2 whitespace-nowrap">→ {hint}</span>}
+      {hint && <span className="text-2xs text-accent-amber mr-2 whitespace-nowrap animate-fade-in">→ {hint}</span>}
       <kbd className="text-2xs text-term-gray border border-term-border px-1">/</kbd>
 
       {showDropdown && (
-        <ul className="absolute left-0 top-full z-50 w-full max-h-80 overflow-auto bg-bg-panel border border-accent-orange shadow-lg">
+        <ul className="absolute left-0 top-[calc(100%+6px)] z-50 w-full max-h-80 overflow-auto rounded-lg bg-bg-panel/95 backdrop-blur-md border border-accent-orange shadow-glow-orange animate-scale-in origin-top">
           {suggestions.map((s, i) => (
             <li
               key={(s.kind === "symbol" ? s.symbol : s.code) + i}
               onMouseDown={(e) => { e.preventDefault(); choose(s); }}
               onMouseEnter={() => setActive(i)}
-              className={`flex items-center justify-between px-2 py-1 cursor-pointer text-xs ${i === active ? "bg-bg-header" : ""}`}
+              className={`flex items-center justify-between px-2 py-1 cursor-pointer text-xs transition-colors duration-150 ${i === active ? "bg-bg-header" : ""}`}
             >
               {s.kind === "symbol" ? (
                 <>
@@ -173,6 +203,7 @@ export function CommandBar({ onExecute }: Props) {
           ))}
         </ul>
       )}
+      </div>
     </div>
   );
 }

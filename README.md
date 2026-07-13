@@ -1,4 +1,4 @@
-# Bloomberg Terminal (Local Clone)
+# Trading Terminal (Local Bloomberg Terminal Clone)
 
 A terminal-style financial dashboard you run locally on **macOS or Windows**.
 React + TypeScript + Vite front end, a small Express proxy back end, live market

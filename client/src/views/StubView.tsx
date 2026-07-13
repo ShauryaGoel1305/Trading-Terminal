@@ -43,25 +43,28 @@ export function StubView({ code }: { code: FunctionCode }) {
 
   return (
     <Panel title={fn?.label ?? code} subtitle={fn?.category ?? "RESTRICTED"}>
-      <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-        <div className="border border-accent-orange px-3 py-1 text-accent-amber text-xs uppercase tracking-widest mb-1">
-          ⚠ No Public Data Available
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center animate-fade-in">
+        <div className="w-12 h-12 rounded-full border border-accent-amber/40 bg-accent-amber/[0.06] flex items-center justify-center text-accent-amber text-lg mb-3">
+          ⚠
         </div>
-        <div className="text-2xs text-term-gray mb-4">
+        <div className="border border-accent-orange/60 rounded-full px-3 py-1 text-accent-amber text-2xs uppercase tracking-widest mb-1.5">
+          No Public Data Available
+        </div>
+        <div className="text-2xs text-term-gray mb-5">
           {code} · {fn?.category}
         </div>
-        <div className="max-w-md space-y-3 text-left">
-          <div>
-            <div className="text-2xs text-accent-amber uppercase">What this is</div>
-            <p className="text-xs text-term-white">{what}</p>
+        <div className="max-w-md w-full space-y-2.5 text-left">
+          <div className="panel-glass !border-t-term-border/60 p-3 rounded-md">
+            <div className="text-2xs text-accent-amber uppercase tracking-wide font-semibold">What this is</div>
+            <p className="text-xs text-term-white mt-1 leading-relaxed">{what}</p>
           </div>
-          <div>
-            <div className="text-2xs text-accent-amber uppercase">Why it's unavailable here</div>
-            <p className="text-xs text-term-gray">{why}</p>
+          <div className="panel-glass !border-t-term-border/60 p-3 rounded-md">
+            <div className="text-2xs text-accent-amber uppercase tracking-wide font-semibold">Why it's unavailable here</div>
+            <p className="text-xs text-term-gray mt-1 leading-relaxed">{why}</p>
           </div>
-          <div>
-            <div className="text-2xs text-accent-amber uppercase">Closest available alternative</div>
-            <p className="text-xs text-term-green">{real}</p>
+          <div className="panel-glass !border-t-term-green/50 p-3 rounded-md">
+            <div className="text-2xs text-term-green uppercase tracking-wide font-semibold">Closest available alternative</div>
+            <p className="text-xs text-term-green/90 mt-1 leading-relaxed">{real}</p>
           </div>
         </div>
       </div>

@@ -40,11 +40,12 @@ async function get<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-async function post<T>(path: string, body: unknown): Promise<T> {
+async function post<T>(path: string, body: unknown, opts?: { signal?: AbortSignal }): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal: opts?.signal,
   });
   if (!res.ok) {
     let detail = res.statusText;
@@ -100,9 +101,12 @@ export const api = {
   aiStatus: () => get<{ enabled: boolean; model: string }>("/ai/status"),
   aiNewsSummary: (opts: { symbol?: string; category?: string; type?: string; topic?: string }) =>
     post<{ text: string }>("/ai/news-summary", opts),
-  aiAnalyze: (symbol: string, data: unknown) => post<{ text: string }>("/ai/analyze", { symbol, data }),
-  aiChat: (opts: { symbol?: string; context?: unknown; messages: { role: "user" | "assistant"; content: string }[] }) =>
-    post<{ text: string }>("/ai/chat", opts),
+  aiAnalyze: (symbol: string, data: unknown, reqOpts?: { signal?: AbortSignal }) =>
+    post<{ text: string }>("/ai/analyze", { symbol, data }, reqOpts),
+  aiChat: (
+    opts: { symbol?: string; context?: unknown; messages: { role: "user" | "assistant"; content: string }[] },
+    reqOpts?: { signal?: AbortSignal }
+  ) => post<{ text: string; navigate?: { symbol?: string; code: string } }>("/ai/chat", opts, reqOpts),
 
   // ── SEC EDGAR filings ────────────────────────────────────────────────
   filings: (symbol: string) => get<FilingsResponse>(`/filings/${symbol}`),
