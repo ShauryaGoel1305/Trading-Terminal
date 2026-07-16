@@ -10,6 +10,11 @@ export function PeersView({ symbol, onSelect }: { symbol: string; onSelect: (s: 
   return (
     <Panel title={`Relative Valuation · ${symbol}`} subtitle="Peers" error={!!error}>
       <DataState loading={loading} error={error} empty={!!data && data.peers.length <= 1} rows={8} cols={6}>
+        {data && data.peersUnavailable && data.peers.length <= 1 && (
+          <div className="px-3 py-2 text-2xs text-term-gray">
+            Peer comparisons are temporarily unavailable from the data provider — showing {symbol} only.
+          </div>
+        )}
         {data && (
           <table className="w-full text-xs">
             <thead className="sticky top-0 bg-bg-header text-term-gray text-2xs uppercase">

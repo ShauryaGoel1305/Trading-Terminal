@@ -28,25 +28,36 @@ export function usePolling<T>(
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
+  // Monotonically increasing request id — lets us discard responses from
+  // stale/superseded requests (e.g. a slow first-load fetch that resolves
+  // after a newer one), which previously could flash "N/A" over good data.
+  const requestIdRef = useRef(0);
 
   const run = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     try {
       const result = await fetcherRef.current();
+      if (requestId !== requestIdRef.current) return; // superseded — ignore
       setData(result);
       setError(null);
       setLastUpdated(Date.now());
     } catch (err: any) {
+      if (requestId !== requestIdRef.current) return; // superseded — ignore
       setError(err?.message ?? "Request failed");
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     let id: ReturnType<typeof setInterval> | undefined;
+    // Small random jitter (±10%) so panels mounted at the same time (e.g. the
+    // 5-6 dashboard widgets that all poll on load) don't all re-fetch in the
+    // same tick forever — spreads request bursts out over time.
+    const jitteredInterval = intervalMs > 0 ? intervalMs + (Math.random() - 0.5) * 0.2 * intervalMs : intervalMs;
     const start = () => {
-      if (intervalMs > 0 && id === undefined) id = setInterval(run, intervalMs);
+      if (jitteredInterval > 0 && id === undefined) id = setInterval(run, jitteredInterval);
     };
     const stop = () => {
       if (id !== undefined) {

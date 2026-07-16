@@ -281,12 +281,19 @@ router.get("/peers/:symbol", async (req, res) => {
   const symbol = req.params.symbol.toUpperCase();
   try {
     const data = await cached(`peers:${symbol}`, async () => {
-      const rec: any = await yf.recommendationsBySymbol(symbol);
-      const peerSymbols: string[] = (rec?.recommendedSymbols ?? [])
-        .map((r: any) => r.symbol)
-        .slice(0, 8);
-      const all = [symbol, ...peerSymbols.filter((s) => s !== symbol)];
+      // Yahoo's recommendations endpoint is prone to intermittent failures
+      // independent of the symbol's validity. Rather than fail the whole
+      // panel with a 502, degrade to an empty peer list so the panel still
+      // renders the base symbol's own quote.
+      let peerSymbols: string[] = [];
+      try {
+        const rec: any = await yf.recommendationsBySymbol(symbol);
+        peerSymbols = (rec?.recommendedSymbols ?? []).map((r: any) => r.symbol).slice(0, 8);
+      } catch {
+        peerSymbols = [];
+      }
 
+      const all = [symbol, ...peerSymbols.filter((s) => s !== symbol)];
       const quotes: any[] = await yf.quote(all);
       const list = (Array.isArray(quotes) ? quotes : [quotes]).map((q: any) => ({
         symbol: q.symbol,
@@ -299,10 +306,12 @@ router.get("/peers/:symbol", async (req, res) => {
         priceToBook: q.priceToBook ?? null,
         isBase: q.symbol === symbol,
       }));
-      return { symbol, peers: list };
+      return { symbol, peers: list, peersUnavailable: peerSymbols.length === 0 };
     }, 300);
     res.json(data);
   } catch (err: any) {
+    // The base symbol's own quote failed too (bad ticker, or Yahoo fully
+    // down) — this is a genuine failure worth surfacing as an error.
     res.status(502).json({ error: "PEERS_UNAVAILABLE", message: err?.message });
   }
 });

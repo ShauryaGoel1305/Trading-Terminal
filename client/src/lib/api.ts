@@ -90,7 +90,8 @@ export const api = {
   financials: (symbol: string, type: "annual" | "quarterly") =>
     get<Financials>(`/financials/${encodeURIComponent(symbol)}?type=${type}`),
   ownership: (symbol: string) => get<Ownership>(`/ownership/${encodeURIComponent(symbol)}`),
-  peers: (symbol: string) => get<{ symbol: string; peers: PeerQuote[] }>(`/peers/${encodeURIComponent(symbol)}`),
+  peers: (symbol: string) =>
+    get<{ symbol: string; peers: PeerQuote[]; peersUnavailable?: boolean }>(`/peers/${encodeURIComponent(symbol)}`),
   screens: () => get<{ id: string; label: string }[]>("/screens"),
   screen: (id: string) =>
     get<{ id: string; title: string; results: ScreenResult[] }>(`/screen/${encodeURIComponent(id)}`),

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Markdown } from "./Markdown";
 import type { ChatMsg } from "../hooks/useAiChat";
 
@@ -149,15 +149,38 @@ function ChatBubble({ role, content }: { role: "user" | "assistant"; content: st
   );
 }
 
+// Escalating status copy so a slow response (the DeepSeek call can take
+// 20-40s for a detailed brief) reads as "working" rather than "frozen".
+function typingStatus(elapsedSec: number): string {
+  if (elapsedSec < 4) return "Thinking";
+  if (elapsedSec < 12) return "Analyzing";
+  if (elapsedSec < 25) return "Pulling live data";
+  return "Still working — complex requests can take a bit longer";
+}
+
 function TypingBubble() {
+  const [elapsedSec, setElapsedSec] = useState(0);
+
+  useEffect(() => {
+    const start = Date.now();
+    const id = setInterval(() => setElapsedSec(Math.floor((Date.now() - start) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   return (
     <div className="flex justify-start animate-fade-in">
       <div className="flex gap-2 max-w-[75%]">
         <div className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-2xs font-bold bg-bg-header text-accent-amber border border-term-border">✦</div>
-        <div className="px-3 py-2.5 rounded-xl panel-glass !border-t-term-border/60 flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-term-gray animate-bounce [animation-delay:-0.3s]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-term-gray animate-bounce [animation-delay:-0.15s]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-term-gray animate-bounce" />
+        <div className="px-3 py-2.5 rounded-xl panel-glass !border-t-term-border/60 flex items-center gap-2">
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-term-gray animate-bounce [animation-delay:-0.3s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-term-gray animate-bounce [animation-delay:-0.15s]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-term-gray animate-bounce" />
+          </span>
+          <span className="text-2xs text-term-gray">
+            {typingStatus(elapsedSec)}
+            {elapsedSec > 0 && <span className="text-term-gray/60"> · {elapsedSec}s</span>}
+          </span>
         </div>
       </div>
     </div>

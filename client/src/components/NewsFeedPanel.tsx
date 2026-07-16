@@ -5,7 +5,9 @@ import { api } from "../lib/api";
 import { fmtTimeAgo } from "../lib/format";
 
 export function NewsFeedPanel() {
-  const { data, loading, error } = usePolling(() => api.news({ limit: 30 }), 20_000, []);
+  // News doesn't need 20s freshness — 60s cuts request volume by 3x with no
+  // perceptible staleness for a headlines feed.
+  const { data, loading, error } = usePolling(() => api.news({ limit: 30 }), 60_000, []);
 
   return (
     <Panel title="News" subtitle="GENERAL" error={!!error && !data}>
