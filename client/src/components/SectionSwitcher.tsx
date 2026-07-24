@@ -1,9 +1,9 @@
-// The three top-level workspaces the whole terminal is organized under.
+// The two top-level workspaces the whole terminal is organized under.
 // Everything reachable from the command bar / function bar lives inside
-// "dashboard"; systematic-research tooling lives inside "quant"; the AI
-// assistant gets its own full-page home in "ai" (it's also reachable as a
-// floating window over the other two — see AiFloatingWindow).
-export type Section = "dashboard" | "quant" | "ai";
+// "dashboard"; the AI assistant gets its own full-page home in "ai" (it's
+// also reachable as a floating window over the dashboard — see
+// AiFloatingWindow).
+export type Section = "dashboard" | "ai";
 
 interface Props {
   section: Section;
@@ -12,13 +12,11 @@ interface Props {
 
 const TABS: { key: Section; label: string; icon: string }[] = [
   { key: "dashboard", label: "Dashboard", icon: "◆" },
-  { key: "quant", label: "Quant Lab", icon: "◈" },
   { key: "ai", label: "AI Analyst", icon: "✦" },
 ];
 
 const ACTIVE_CLASS: Record<Section, string> = {
   dashboard: "bg-gradient-to-r from-accent-orange to-accent-amber text-black shadow-glow-orange",
-  quant: "bg-gradient-to-r from-purple-600 to-purple-400 text-black shadow-glow-purple",
   ai: "bg-gradient-to-r from-cyan-500 to-sky-400 text-black shadow-glow-cyan",
 };
 

@@ -11,13 +11,13 @@ function fmtDate(iso: string | null): string {
   return new Date(iso + "T00:00:00").toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit" });
 }
 
-export function DividendsView({ symbol }: { symbol: string }) {
+export function DividendsView({ symbol, focus = "dividends" }: { symbol: string; focus?: "dividends" | "actions" }) {
   const { data, loading, error } = usePolling(() => api.dividends(symbol), 0, [symbol]);
 
   return (
     <Panel
-      title={`Dividends & Splits · ${symbol}`}
-      subtitle="Corporate actions · Yahoo"
+      title={focus === "actions" ? `Corporate Actions · ${symbol}` : `Dividends & Splits · ${symbol}`}
+      subtitle={focus === "actions" ? "Splits & dividend events · Yahoo" : "Corporate actions · Yahoo"}
       error={!!error}
       className="h-full"
       bodyClassName="flex flex-col min-h-0"
@@ -26,15 +26,29 @@ export function DividendsView({ symbol }: { symbol: string }) {
         {data && (
           <div className="flex flex-col min-h-0 flex-1">
             <Summary data={data} />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-term-border min-h-0 flex-1 overflow-hidden">
-              <div className="lg:col-span-2 bg-bg-panel flex flex-col min-h-0">
-                <DividendTable data={data} />
+            {/* DVD leads with the dividend table (income focus); CACS leads
+                with splits/actions (event focus) — same data, different lens. */}
+            {focus === "actions" ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-term-border min-h-0 flex-1 overflow-hidden">
+                <div className="lg:col-span-2 bg-bg-panel flex flex-col min-h-0 overflow-auto">
+                  <SplitTable data={data} />
+                  <AnnualBars data={data} />
+                </div>
+                <div className="bg-bg-panel flex flex-col min-h-0">
+                  <DividendTable data={data} />
+                </div>
               </div>
-              <div className="bg-bg-panel flex flex-col min-h-0 overflow-auto">
-                <SplitTable data={data} />
-                <AnnualBars data={data} />
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-term-border min-h-0 flex-1 overflow-hidden">
+                <div className="lg:col-span-2 bg-bg-panel flex flex-col min-h-0">
+                  <DividendTable data={data} />
+                </div>
+                <div className="bg-bg-panel flex flex-col min-h-0 overflow-auto">
+                  <SplitTable data={data} />
+                  <AnnualBars data={data} />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </DataState>

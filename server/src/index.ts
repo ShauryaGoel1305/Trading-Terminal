@@ -17,6 +17,7 @@ import filings from "./routes/filings.js";
 import broker from "./routes/broker.js";
 import dividends from "./routes/dividends.js";
 import analytics from "./routes/analytics.js";
+import macro from "./routes/macro.js";
 import { startNews } from "./newsEngine.js";
 import { aiEnabled } from "./ai.js";
 
@@ -56,6 +57,7 @@ app.use("/api/filings", filings);
 app.use("/api/broker-research", broker);
 app.use("/api/dividends", dividends);
 app.use("/api", analytics);
+app.use("/api/macro", macro);
 
 app.use("/api", (_req, res) => res.status(404).json({ error: "NOT_FOUND" }));
 

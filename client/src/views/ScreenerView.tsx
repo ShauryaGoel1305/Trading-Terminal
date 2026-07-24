@@ -5,9 +5,15 @@ import { usePolling } from "../hooks/usePolling";
 import { api } from "../lib/api";
 import { fmtCompact, fmtNum, fmtPct, fmtPrice, fmtVolume, trendClass } from "../lib/format";
 
-export function ScreenerView({ onSelect }: { onSelect: (s: string) => void }) {
+export function ScreenerView({
+  onSelect,
+  defaultScreen = "day_gainers",
+}: {
+  onSelect: (s: string) => void;
+  defaultScreen?: string;
+}) {
   const [screens, setScreens] = useState<{ id: string; label: string }[]>([]);
-  const [active, setActive] = useState("day_gainers");
+  const [active, setActive] = useState(defaultScreen);
   // client-side factor filters
   const [minMktCap, setMinMktCap] = useState(0);
   const [maxPE, setMaxPE] = useState(0);
@@ -15,6 +21,10 @@ export function ScreenerView({ onSelect }: { onSelect: (s: string) => void }) {
   useEffect(() => {
     api.screens().then(setScreens).catch(() => {});
   }, []);
+
+  // EQS and MOST share this view but open on different screens by default —
+  // resync when the code (not a user click) changes the default.
+  useEffect(() => setActive(defaultScreen), [defaultScreen]);
 
   const { data, loading, error } = usePolling(() => api.screen(active), 120_000, [active]);
 

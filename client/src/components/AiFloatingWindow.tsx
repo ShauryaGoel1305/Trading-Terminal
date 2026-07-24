@@ -27,7 +27,7 @@ function clamp(v: number, min: number, max: number) {
   return Math.min(Math.max(v, min), max);
 }
 
-// A draggable, resizable chat window that floats above the Dashboard or Quant
+// A draggable, resizable chat window that floats above the Dashboard
 // section so the user can chat with the AI while looking at data underneath,
 // without leaving whatever screen they're on. Shares the exact same
 // conversation as the AI tab (AiAnalysisView) via lifted props — opening this

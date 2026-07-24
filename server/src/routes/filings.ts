@@ -183,4 +183,60 @@ router.get("/:symbol", async (req, res) => {
   }
 });
 
+// ── 13F Filings (F13 view) ──────────────────────────────────────────────
+// 13F-HR is filed BY institutional managers, not BY the company — so there is
+// no per-company 13F filing. Instead we full-text-search EDGAR for managers
+// whose 13F-HR "information table" mentions this company by name, which is
+// the closest honest free equivalent (no fabricated position sizes; open the
+// linked filing for the real holdings detail).
+router.get("/13f/:symbol", async (req, res) => {
+  const symbol = req.params.symbol.toUpperCase();
+  try {
+    const data = await withCache(`13f:${symbol}`, 3600_000, async () => {
+      const info = await getCIK(symbol);
+      if (!info) throw new Error("NOT_FOUND");
+      const { name } = info;
+
+      const searchRes = await secAxios.get("https://efts.sec.gov/LATEST/search-index", {
+        params: { q: `"${name}"`, forms: "13F-HR" },
+      });
+      const hits: any[] = searchRes.data?.hits?.hits ?? [];
+
+      const seen = new Set<string>();
+      const managers = hits
+        .map((h) => {
+          const src = h._source ?? {};
+          const managerCik = Number((src.ciks ?? [])[0]);
+          const displayName = (src.display_names ?? [])[0] ?? "Unknown Manager";
+          const managerName = displayName.replace(/\s*\(CIK.*\)$/, "").trim();
+          const { indexUrl } = buildUrls(managerCik, src.adsh ?? "", "");
+          return {
+            manager: managerName,
+            cik: managerCik,
+            filingDate: src.file_date ?? "",
+            periodEnding: src.period_ending ?? "",
+            indexUrl,
+          };
+        })
+        .filter((m) => {
+          if (!m.cik || seen.has(String(m.cik))) return false;
+          seen.add(String(m.cik));
+          return true;
+        })
+        .sort((a, b) => (a.filingDate < b.filingDate ? 1 : -1))
+        .slice(0, 15);
+
+      return { symbol, companyName: name, managers };
+    });
+    res.json(data);
+  } catch (err: any) {
+    console.error("[filings13f]", err?.message);
+    if (err?.message === "NOT_FOUND") {
+      res.status(404).json({ error: "NOT_FOUND", message: "Ticker not found on SEC EDGAR." });
+    } else {
+      res.status(502).json({ error: "SEC_ERROR", message: err?.message ?? "SEC full-text search failed" });
+    }
+  }
+});
+
 export default router;

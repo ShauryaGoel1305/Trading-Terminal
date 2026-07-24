@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Panel } from "../components/Panel";
 import { DataState, Metric, SectionHead } from "../components/ui";
 import { usePolling } from "../hooks/usePolling";
@@ -8,9 +9,18 @@ function pct(v: number | null | undefined) {
   return v == null ? "—" : fmtPct(v * 100);
 }
 
-export function DescriptionView({ symbol }: { symbol: string }) {
+export function DescriptionView({ symbol, focus }: { symbol: string; focus?: "officers" }) {
   const { data, loading, error } = usePolling(() => api.fundamentals(symbol), 0, [symbol]);
   const s = data?.stats ?? {};
+  const officersRef = useRef<HTMLDivElement>(null);
+
+  // MGMT is "DES, but jump straight to the officers table" — reuses the same
+  // profile payload rather than duplicating a whole view for one section.
+  useEffect(() => {
+    if (focus === "officers" && data) {
+      officersRef.current?.scrollIntoView({ block: "start" });
+    }
+  }, [focus, data]);
 
   return (
     <div className="h-full grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-px bg-term-border">
@@ -33,11 +43,17 @@ export function DescriptionView({ symbol }: { symbol: string }) {
                   </a>
                 )}
               </div>
-              <SectionHead title="Business Summary" />
-              <p className="px-2 py-2 text-2xs text-term-gray leading-relaxed whitespace-pre-line">
-                {data.profile.summary ?? "No summary available."}
-              </p>
-              <SectionHead title="Key Executives" />
+              {focus !== "officers" && (
+                <>
+                  <SectionHead title="Business Summary" />
+                  <p className="px-2 py-2 text-2xs text-term-gray leading-relaxed whitespace-pre-line">
+                    {data.profile.summary ?? "No summary available."}
+                  </p>
+                </>
+              )}
+              <div ref={officersRef}>
+                <SectionHead title={focus === "officers" ? "Key Executives — Management" : "Key Executives"} />
+              </div>
               <table className="w-full text-2xs">
                 <tbody>
                   {data.profile.officers.map((o, i) => (
@@ -45,6 +61,7 @@ export function DescriptionView({ symbol }: { symbol: string }) {
                       <td className="px-2 py-1 text-term-white">{o.name}</td>
                       <td className="px-2 py-1 text-term-gray">{o.title}</td>
                       <td className="num px-2 py-1 text-term-white">{o.pay ? fmtCompact(o.pay) : "—"}</td>
+                      {focus === "officers" && <td className="num px-2 py-1 text-term-gray">{o.age ?? "—"}</td>}
                     </tr>
                   ))}
                 </tbody>

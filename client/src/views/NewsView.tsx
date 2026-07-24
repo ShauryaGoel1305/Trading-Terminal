@@ -30,7 +30,7 @@ const SENT_ICON: Record<NewsSentiment, string> = { bullish: "▲", bearish: "▼
 const TYPE_ICON: Record<string, string> = { article: "📰", research: "🎓", video: "▶", specialized: "🎤" };
 const TYPE_LABEL: Record<string, string> = { article: "ARTICLE", research: "RESEARCH", video: "VIDEO", specialized: "STATEMENT" };
 
-export function NewsView({ symbol }: { symbol?: string }) {
+export function NewsView({ symbol, headlinesOnly }: { symbol?: string; headlinesOnly?: boolean }) {
   const [filter, setFilter] = useState("all");
   const [activeSymbol, setActiveSymbol] = useState(symbol ?? "");
   const [searchInput, setSearchInput] = useState("");
@@ -79,7 +79,12 @@ export function NewsView({ symbol }: { symbol?: string }) {
     }
   }
 
-  const items = data ?? [];
+  // TOP ("Top Headlines") shows only high-traction, multi-sourced stories;
+  // N shows the full feed. Same data, a narrower lens.
+  const items = useMemo(() => {
+    const all = data ?? [];
+    return headlinesOnly ? all.filter((n) => (n.sources?.length ?? 1) >= 3) : all;
+  }, [data, headlinesOnly]);
   const counts = useMemo(() => {
     const c = { bullish: 0, bearish: 0, neutral: 0 };
     for (const i of items) c[(i.sentiment ?? "neutral") as NewsSentiment]++;
@@ -99,7 +104,7 @@ export function NewsView({ symbol }: { symbol?: string }) {
       {/* Header */}
       <div className="flex items-center gap-3 px-2 py-1 bg-bg-header border-b border-term-border text-2xs">
         <span className="text-accent-amber font-semibold uppercase whitespace-nowrap">
-          News & Intelligence{activeSymbol ? ` · ${activeSymbol}` : ""}
+          {headlinesOnly ? "Top Headlines" : "News & Intelligence"}{activeSymbol ? ` · ${activeSymbol}` : ""}
         </span>
         <form onSubmit={submitSearch} className="flex items-center gap-1">
           <input

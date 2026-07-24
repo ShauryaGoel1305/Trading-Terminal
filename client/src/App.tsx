@@ -43,7 +43,9 @@ import { HistoricalPricesView } from "./views/HistoricalPricesView";
 import { IndicesView } from "./views/IndicesView";
 import { CurrenciesView } from "./views/CurrenciesView";
 import { FunctionDirectoryView } from "./views/FunctionDirectoryView";
-import { QuantView } from "./views/QuantView";
+import { OptionsChainView } from "./views/OptionsChainView";
+import { MacroView } from "./views/MacroView";
+import { ThirteenFView } from "./views/ThirteenFView";
 
 function StatusBar({ symbol, view }: { symbol: string; view: FunctionCode }) {
   const [clock, setClock] = useState(() => new Date());
@@ -116,18 +118,16 @@ function Terminal() {
     }
   }, [view]);
 
-  // The terminal has three top-level workspaces: Dashboard (everything the
-  // function bar / command bar reaches), Quant Lab (systematic research
-  // tooling), and AI Analyst (full-page chat). Which one is "active" is
-  // derived from the current function's group, so any future Quant/AI
-  // function automatically routes there.
-  const section: Section =
-    FUNCTION_MAP[view]?.group === "Quant" ? "quant" : FUNCTION_MAP[view]?.group === "AI" ? "ai" : "dashboard";
+  // The terminal has two top-level workspaces: Dashboard (everything the
+  // function bar / command bar reaches) and AI Analyst (full-page chat).
+  // Which one is "active" is derived from the current function's group, so
+  // any future AI function automatically routes there.
+  const section: Section = FUNCTION_MAP[view]?.group === "AI" ? "ai" : "dashboard";
   // Clicking a section tab always jumps to that section's home screen — it's
   // a "go to Dashboard" action, not "restore whatever I was last looking at"
   // (that's what the localStorage refresh-persistence above is for).
   const selectSection = useCallback(
-    (s: Section) => setView(s === "quant" ? "QUANT" : s === "ai" ? "AI" : "DASH"),
+    (s: Section) => setView(s === "ai" ? "AI" : "DASH"),
     []
   );
 
@@ -182,8 +182,8 @@ function Terminal() {
       case "BTMM":
       case "CMDTY":
       case "GLCO": return <MarketsView onSelect={inspect} />;
-      case "N":
-      case "TOP": return <NewsView />;
+      case "N": return <NewsView />;
+      case "TOP": return <NewsView headlinesOnly />;
       case "CN": return <NewsView symbol={symbol} />;
       case "ALRT": return <AlertsView symbol={symbol} />;
       case "WEI": return <IndicesView />;
@@ -191,11 +191,11 @@ function Terminal() {
       case "WCRS": return <CurrenciesView />;
       case "FUNC":
       case "MENU": return <FunctionDirectoryView onSelect={setView} />;
-      case "DES":
-      case "MGMT": return <DescriptionView symbol={symbol} />;
+      case "DES": return <DescriptionView symbol={symbol} />;
+      case "MGMT": return <DescriptionView symbol={symbol} focus="officers" />;
       case "HP": return <HistoricalPricesView symbol={symbol} />;
-      case "GP":
-      case "GIP": return <ChartView symbol={symbol} />;
+      case "GP": return <ChartView symbol={symbol} preset="gp" />;
+      case "GIP": return <ChartView symbol={symbol} preset="gip" />;
       case "SIG": return <SignalsView symbol={symbol} />;
       case "AI":
         return (
@@ -212,37 +212,41 @@ function Terminal() {
             loading={aiStatus.loading}
           />
         );
-      case "AR":
-      case "CF": return <FilingsView symbol={symbol} />;
+      case "AR": return <FilingsView symbol={symbol} defaultTab="annual" />;
+      case "CF": return <FilingsView symbol={symbol} defaultTab="quarterly" />;
       case "BRC": return <BrokerResearchView symbol={symbol} />;
-      case "DVD":
-      case "CACS": return <DividendsView symbol={symbol} />;
+      case "DVD": return <DividendsView symbol={symbol} />;
+      case "CACS": return <DividendsView symbol={symbol} focus="actions" />;
       case "SI": return <ShortInterestView symbol={symbol} />;
-      case "INSD":
-      case "HDS": return <OwnershipView symbol={symbol} />;
+      case "INSD": return <OwnershipView symbol={symbol} focus="insiders" />;
+      case "HDS": return <OwnershipView symbol={symbol} focus="holders" />;
       case "ETF": return <EtfView symbol={symbol} />;
       case "HVG": return <VolatilityView symbol={symbol} />;
       case "BETA": return <BetaView symbol={symbol} />;
       case "GF": return <FundamentalGraphView symbol={symbol} />;
-      case "RV": return <PeersView symbol={symbol} onSelect={inspect} />;
-      case "G":
-      case "TECH": return <ChartView symbol={symbol} />;
+      case "G": return <ChartView symbol={symbol} preset="g" />;
+      case "TECH": return <ChartView symbol={symbol} preset="tech" />;
       case "FA": return <FinancialsView symbol={symbol} />;
-      case "EE":
-      case "ERN":
-      case "ANR":
-      case "SURP": return <EstimatesView symbol={symbol} />;
-      case "OWN": return <OwnershipView symbol={symbol} />;
+      case "EE": return <EstimatesView symbol={symbol} defaultTab="consensus" />;
+      case "ERN": return <EstimatesView symbol={symbol} defaultTab="earnings" />;
+      case "ANR": return <EstimatesView symbol={symbol} defaultTab="recommendations" />;
+      case "SURP": return <EstimatesView symbol={symbol} defaultTab="surprise" />;
+      case "OWN": return <OwnershipView symbol={symbol} focus="overview" />;
       case "COMP": return <PeersView symbol={symbol} onSelect={inspect} />;
       case "ESG": return <EsgView symbol={symbol} />;
-      case "EQS":
-      case "MOST": return <ScreenerView onSelect={inspect} />;
+      case "EQS": return <ScreenerView onSelect={inspect} defaultScreen="day_gainers" />;
+      case "MOST": return <ScreenerView onSelect={inspect} defaultScreen="most_actives" />;
       case "YCRV": return <YieldCurveView />;
       case "ECO": return <EconomicView symbol={symbol} />;
       case "PORT": return <PortfolioView onSelect={inspect} />;
       case "RISK": return <RiskView />;
       case "TRADE": return <TradeView symbol={symbol} />;
-      case "QUANT": return <QuantView />;
+      case "OMON": return <OptionsChainView symbol={symbol} />;
+      case "GDP": return <MacroView series="gdp" />;
+      case "CPI": return <MacroView series="cpi" />;
+      case "FOMC": return <MacroView series="fomc" />;
+      case "CENB": return <MacroView series="cenb" />;
+      case "F13": return <ThirteenFView symbol={symbol} />;
       default: return <LaunchpadView symbol={symbol} onSelect={loadSymbol} />;
     }
   }

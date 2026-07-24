@@ -385,6 +385,32 @@ export interface BetaResponse {
   }[];
 }
 
+// ── 13F Filings (F13) ────────────────────────────────────────────────────
+export interface ThirteenFResponse {
+  symbol: string;
+  companyName: string;
+  managers: { manager: string; cik: number; filingDate: string; periodEnding: string; indexUrl: string }[];
+}
+
+// ── Macro data (GDP / CPI / FOMC / CENB via FRED) ───────────────────────
+export interface FredPoint { date: string; value: number }
+export interface GdpResponse {
+  real: (FredPoint & { qoqAnnualized: number | null; yoy: number | null })[];
+  nominal: FredPoint[];
+}
+export interface CpiResponse {
+  series: (FredPoint & { yoy: number | null })[];
+}
+export interface FomcResponse {
+  series: FredPoint[];
+  latest: number | null;
+  latestDate: string | null;
+  changeVsPriorMonth: number | null;
+}
+export interface CenbResponse {
+  banks: { bank: string; proxy: string; exact: boolean; latest: FredPoint | null }[];
+}
+
 // ── Client-side persisted state (portfolio, alerts, watchlists) ─────────
 export interface Position {
   symbol: string;

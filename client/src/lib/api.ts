@@ -5,6 +5,11 @@ import type {
   EtfResponse,
   VolatilityResponse,
   BetaResponse,
+  GdpResponse,
+  CpiResponse,
+  FomcResponse,
+  CenbResponse,
+  ThirteenFResponse,
 } from "../types";
 import type {
   Quote,
@@ -111,6 +116,7 @@ export const api = {
 
   // ── SEC EDGAR filings ────────────────────────────────────────────────
   filings: (symbol: string) => get<FilingsResponse>(`/filings/${symbol}`),
+  filings13f: (symbol: string) => get<ThirteenFResponse>(`/filings/13f/${encodeURIComponent(symbol)}`),
 
   // ── Broker research (sell-side actions) ──────────────────────────────
   brokerResearch: (symbol: string) =>
@@ -124,4 +130,10 @@ export const api = {
   etf: (symbol: string) => get<EtfResponse>(`/etf/${encodeURIComponent(symbol)}`),
   volatility: (symbol: string) => get<VolatilityResponse>(`/volatility/${encodeURIComponent(symbol)}`),
   beta: (symbol: string) => get<BetaResponse>(`/beta/${encodeURIComponent(symbol)}`),
+
+  // ── Macro data (GDP / CPI / FOMC / CENB via FRED) ────────────────────
+  gdp: () => get<GdpResponse>("/macro/gdp"),
+  cpi: () => get<CpiResponse>("/macro/cpi"),
+  fomc: () => get<FomcResponse>("/macro/fomc"),
+  cenb: () => get<CenbResponse>("/macro/cenb"),
 };

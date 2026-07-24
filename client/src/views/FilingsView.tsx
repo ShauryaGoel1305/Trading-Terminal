@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Panel } from "../components/Panel";
 import { SkeletonRows } from "../components/Skeleton";
 import { usePolling } from "../hooks/usePolling";
@@ -317,8 +317,12 @@ const TABS = [
 
 type TabKey = typeof TABS[number]["key"];
 
-export function FilingsView({ symbol }: { symbol: string }) {
-  const [tab, setTab] = useState<TabKey>("annual");
+export function FilingsView({ symbol, defaultTab = "annual" }: { symbol: string; defaultTab?: TabKey }) {
+  const [tab, setTab] = useState<TabKey>(defaultTab);
+  // AR ("Annual Reports") and CF ("Company Filings") share this view but
+  // land on different tabs by default — resync when the code (not the
+  // symbol) changes so switching AR <-> CF actually shows something different.
+  useEffect(() => setTab(defaultTab), [defaultTab]);
   const { data, loading, error } = usePolling(() => api.filings(symbol), 0, [symbol]);
 
   return (

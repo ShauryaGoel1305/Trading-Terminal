@@ -1,6 +1,7 @@
 import axios from "axios";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // ── Types ────────────────────────────────────────────────────────────────
 export type ArticleType = "article" | "research" | "video" | "specialized";
@@ -89,6 +90,19 @@ const FEEDS: FeedSource[] = [
   gnews("stock market trading earnings", "markets", "Reuters/AP Web"),
   gnews("S&P 500 Nasdaq Dow market today", "markets"),
   gnews("breaking financial markets news", "markets"),
+  // Broader sector/topic coverage — same "markets" category, different slice
+  // of the economy each poll, so the capped store holds a wider variety of
+  // stories rather than more near-duplicate top-of-market headlines.
+  gnews("semiconductor chip industry news", "markets"),
+  gnews("artificial intelligence AI industry business", "markets"),
+  gnews("energy oil gas OPEC market", "markets"),
+  gnews("biotech pharmaceutical FDA drug approval", "markets"),
+  gnews("retail consumer spending earnings", "markets"),
+  gnews("bank financial sector regulation", "markets"),
+  gnews("IPO merger acquisition deal", "markets"),
+  gnews("real estate REIT housing market", "markets"),
+  gnews("airline travel industry earnings", "markets"),
+  gnews("automaker EV industry earnings", "markets"),
 
   // Crypto
   { name: "CoinDesk", url: "https://www.coindesk.com/arc/outboundfeeds/rss/", type: "article", category: "crypto" },
@@ -170,7 +184,7 @@ function parseFeed(xml: string): RawItem[] {
     const datetime = pub ? Math.floor(new Date(pub).getTime() / 1000) : Math.floor(Date.now() / 1000);
 
     const rawSummary = tag(block, "description") || tag(block, "summary") || tag(block, "media:description") || tag(block, "content");
-    const summary = stripHtml(rawSummary).slice(0, 260);
+    const summary = stripHtml(rawSummary).slice(0, 200);
 
     // Thumbnail (YouTube / media RSS)
     const thumb = block.match(/<media:thumbnail[^>]*url="([^"]+)"/i) || block.match(/<media:content[^>]*url="([^"]+)"/i);
@@ -226,12 +240,19 @@ function detectTickers(text: string): string[] {
 const DAY = 86_400;
 // Per-type retention: plain news articles kept 3 months; every other form
 // (research, video, specialized) kept up to 5 years.
-const ARTICLE_RETENTION = 90 * DAY; // 3 months
-const LONG_RETENTION = 1825 * DAY; // 5 years
-const MAJOR_ARTICLE_RETENTION = 365 * DAY; // high-traction articles kept 1 year
+const ARTICLE_RETENTION = 45 * DAY; // 1.5 months — was 3mo; MAX_ARTICLES cap still applies on top
+const LONG_RETENTION = 1825 * DAY; // 5 years (low-volume research/video/specialized feeds)
+const MAJOR_ARTICLE_RETENTION = 180 * DAY; // high-traction articles kept 6 months (was 1yr)
 const MAJOR_THRESHOLD = 3; // carried by ≥3 distinct outlets
-const MAX_ARTICLES = 25000;
-const SNAPSHOT_FILE = path.resolve(process.cwd(), "news-cache.json");
+// Lowered from 25000 — the dominant server RAM consumer was this in-memory
+// store; a smaller hard cap plus the trimmed summary length below (260→200
+// chars) meaningfully cuts steady-state memory on a RAM-constrained host.
+const MAX_ARTICLES = 8000;
+// Resolve relative to this file (like env.ts does), NOT process.cwd() — cwd
+// differs between `npm run dev` (repo root) and running inside the `server`
+// workspace, which previously produced two divergent snapshot files.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SNAPSHOT_FILE = path.resolve(__dirname, "../news-cache.json");
 
 const store = new Map<string, Article>();
 let lastRefresh = 0;
@@ -307,7 +328,7 @@ function prune() {
 // ── Disk snapshot ────────────────────────────────────────────────────────
 async function snapshot() {
   try {
-    const arr = [...store.values()].sort((a, b) => b.datetime - a.datetime).slice(0, 15000);
+    const arr = [...store.values()].sort((a, b) => b.datetime - a.datetime).slice(0, MAX_ARTICLES);
     await fs.writeFile(SNAPSHOT_FILE, JSON.stringify(arr), "utf8");
   } catch {
     /* best-effort */

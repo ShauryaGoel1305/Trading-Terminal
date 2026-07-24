@@ -4,7 +4,11 @@ const TTL = Number(process.env.CACHE_TTL_SECONDS ?? 60);
 
 // Single in-memory cache shared across routes. Keyed by `route:args`.
 // checkperiod keeps memory tidy by purging expired keys periodically.
-const cache = new NodeCache({ stdTTL: TTL, checkperiod: Math.max(30, TTL) });
+// useClones:false skips NodeCache's default deep-clone on every get/set —
+// real CPU+RAM overhead on the larger payloads (news, financials) — safe
+// here since every route handler only reads cached data, never mutates it
+// in place.
+const cache = new NodeCache({ stdTTL: TTL, checkperiod: Math.max(30, TTL), useClones: false });
 
 /**
  * Return a cached value if present, otherwise run `producer`, cache and

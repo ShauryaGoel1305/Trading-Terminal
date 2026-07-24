@@ -9,7 +9,7 @@
 // function directory) or the command bar.
 export type FunctionCode = string;
 export type FuncStatus = "live" | "none";
-export type FuncGroup = "Monitor" | "Security" | "Markets" | "Portfolio" | "Restricted" | "Quant" | "AI";
+export type FuncGroup = "Monitor" | "Security" | "Markets" | "Portfolio" | "Restricted" | "AI";
 
 export interface FunctionDef {
   code: FunctionCode;
@@ -47,7 +47,6 @@ export const CATEGORY_ORDER: string[] = [
   "M&A & Corporate Actions",
   "Industry & Sectors",
   "Tools & Messaging",
-  "Quant & Algo Trading",
 ];
 
 export const FUNCTIONS: FunctionDef[] = [
@@ -66,12 +65,12 @@ export const FUNCTIONS: FunctionDef[] = [
   { code: "FA", label: "Financials", group: "Security", category: "Equity Analysis", security: true, status: "live", desc: "Structured financial statements — income statement, balance sheet, cash flow" },
   { code: "HP", label: "Historical Prices", group: "Security", category: "Equity Analysis", security: true, status: "live", pinned: true, desc: "Daily OHLCV price history table" },
   { code: "DVD", label: "Dividends", group: "Security", category: "Equity Analysis", security: true, status: "live", pinned: true, desc: "Full dividend & stock-split history, yield, payout, growth & CAGR" },
-  { code: "CF", label: "Company Filings", group: "Security", category: "Equity Analysis", security: true, status: "live", pinned: true, desc: "SEC annual reports, 10-K/10-Q/proxy/8-K/ESG filings — 10+ years via EDGAR" },
-  { code: "AR", label: "Annual Reports", group: "Security", category: "Equity Analysis", security: true, status: "live", pinned: true, desc: "Annual reports & all SEC filings (10-K BS/IS/PL, 10-Q, proxy, 8-K, ESG) — 10+ years via EDGAR" },
+  { code: "CF", label: "Company Filings", group: "Security", category: "Equity Analysis", security: true, status: "live", pinned: true, desc: "All SEC filings, defaults to the 10-Q/current stream — 10-K/10-Q/proxy/8-K/ESG via EDGAR" },
+  { code: "AR", label: "Annual Reports", group: "Security", category: "Equity Analysis", security: true, status: "live", pinned: true, desc: "SEC filings defaulting to 10-K annual reports (BS/IS/PL) — 10+ years via EDGAR" },
   { code: "SPLC", label: "Supply Chain", group: "Security", category: "Equity Analysis", security: true, status: "none", desc: "Suppliers, customers & competitors graph" },
-  { code: "MGMT", label: "Management", group: "Security", category: "Equity Analysis", security: true, status: "live", desc: "Key executives, titles, pay & age (with company profile)" },
+  { code: "MGMT", label: "Management", group: "Security", category: "Equity Analysis", security: true, status: "live", desc: "Jumps straight to key executives, titles & pay (DES scrolled to Management)" },
   { code: "BIO", label: "Biographies", group: "Security", category: "Equity Analysis", security: true, status: "none", desc: "Executive & director biographies" },
-  { code: "CACS", label: "Corporate Actions", group: "Security", category: "Equity Analysis", security: true, status: "live", desc: "Splits & dividends history (corporate actions)" },
+  { code: "CACS", label: "Corporate Actions", group: "Security", category: "Equity Analysis", security: true, status: "live", desc: "Splits & corporate action events, led by the splits ledger (DVD led by dividends instead)" },
   { code: "GEOR", label: "Geographic Revenue", group: "Security", category: "Equity Analysis", security: true, status: "none", desc: "Revenue by geography & segment" },
   { code: "RELS", label: "Related Securities", group: "Security", category: "Equity Analysis", security: true, status: "none", desc: "Share classes, ADRs, linked instruments" },
   { code: "SI", label: "Short Interest", group: "Security", category: "Equity Analysis", security: true, status: "live", desc: "Short interest, % of float, days-to-cover & MoM change" },
@@ -79,11 +78,11 @@ export const FUNCTIONS: FunctionDef[] = [
   { code: "ESG", label: "ESG", group: "Security", category: "Equity Analysis", security: true, status: "live", pinned: true, desc: "ESG & governance overview" },
 
   // ── Estimates & Earnings ────────────────────────────────────────────
-  { code: "EE", label: "Estimates", group: "Security", category: "Estimates & Earnings", security: true, status: "live", pinned: true, desc: "Analyst estimates & consensus targets" },
-  { code: "ERN", label: "Earnings Summary", group: "Security", category: "Estimates & Earnings", security: true, status: "live", desc: "Earnings history, surprises & trend" },
-  { code: "ANR", label: "Analyst Recommendations", group: "Security", category: "Estimates & Earnings", security: true, status: "live", desc: "Buy/hold/sell ratings distribution" },
+  { code: "EE", label: "Estimates", group: "Security", category: "Estimates & Earnings", security: true, status: "live", pinned: true, desc: "Analyst consensus targets & forward EPS/revenue (Consensus tab)" },
+  { code: "ERN", label: "Earnings Summary", group: "Security", category: "Estimates & Earnings", security: true, status: "live", desc: "Quarterly earnings history, actual vs estimate (Earnings History tab)" },
+  { code: "ANR", label: "Analyst Recommendations", group: "Security", category: "Estimates & Earnings", security: true, status: "live", desc: "Buy/hold/sell ratings distribution over time (Recommendation Trend tab)" },
   { code: "EM", label: "Earnings & Estimates", group: "Security", category: "Estimates & Earnings", security: true, status: "none", desc: "Detailed estimate breakdown by metric" },
-  { code: "SURP", label: "Earnings Surprise", group: "Security", category: "Estimates & Earnings", security: true, status: "live", desc: "Historical EPS surprise vs estimate" },
+  { code: "SURP", label: "Earnings Surprise", group: "Security", category: "Estimates & Earnings", security: true, status: "live", desc: "Historical EPS surprise vs estimate (Surprise History tab)" },
   { code: "BEST", label: "Consensus Estimates", group: "Security", category: "Estimates & Earnings", security: true, status: "none", desc: "Bloomberg BEST consensus dataset", alt: "Aggregated consensus EPS/revenue is shown in EE." },
   { code: "EEB", label: "Estimates by Broker", group: "Security", category: "Estimates & Earnings", security: true, status: "none", desc: "Individual broker estimate detail" },
   { code: "BRC", label: "Broker Research", group: "Security", category: "Estimates & Earnings", security: true, status: "live", pinned: true, desc: "Sell-side ratings actions by named firm (Goldman, MS, JPM, Jefferies…), upgrades/downgrades, price targets & consensus" },
@@ -91,31 +90,30 @@ export const FUNCTIONS: FunctionDef[] = [
   { code: "GUID", label: "Company Guidance", group: "Security", category: "Estimates & Earnings", security: true, status: "none", desc: "Management forward guidance history" },
 
   // ── Ownership & Holders ─────────────────────────────────────────────
-  { code: "OWN", label: "Ownership", group: "Security", category: "Ownership & Holders", security: true, status: "live", pinned: true, desc: "Institutional, fund & insider ownership" },
-  { code: "HDS", label: "Holders", group: "Security", category: "Ownership & Holders", security: true, status: "live", desc: "Institutional, fund & insider holders (with ownership)" },
-  { code: "INSD", label: "Insider Transactions", group: "Security", category: "Ownership & Holders", security: true, status: "live", desc: "Insider buy/sell filings (shown with ownership)" },
-  { code: "F13", label: "13F Filings", group: "Security", category: "Ownership & Holders", security: true, status: "none", desc: "13F institutional position filings", alt: "Search the manager on SEC EDGAR (13F-HR)." },
+  { code: "OWN", label: "Ownership", group: "Security", category: "Ownership & Holders", security: true, status: "live", pinned: true, desc: "Ownership overview — breakdown + top institutional holders + insiders" },
+  { code: "HDS", label: "Holders", group: "Security", category: "Ownership & Holders", security: true, status: "live", desc: "Institutional holders and fund holders side by side, in detail" },
+  { code: "INSD", label: "Insider Transactions", group: "Security", category: "Ownership & Holders", security: true, status: "live", desc: "Full-width insider buy/sell transaction blotter" },
+  { code: "F13", label: "13F Filings", group: "Security", category: "Ownership & Holders", security: true, status: "live", desc: "Institutional managers whose 13F-HR filings mention this company — EDGAR full-text search" },
   { code: "PHDC", label: "Portfolio Holdings", group: "Security", category: "Ownership & Holders", security: true, status: "none", desc: "Holder portfolio composition" },
 
   // ── Comparables & Screening ─────────────────────────────────────────
   { code: "COMP", label: "Comparables", group: "Security", category: "Comparables & Screening", security: true, status: "live", pinned: true, desc: "Peer relative valuation table" },
-  { code: "EQS", label: "Equity Screener", group: "Markets", category: "Comparables & Screening", status: "live", pinned: true, desc: "Multi-factor equity screening" },
-  { code: "MOST", label: "Most Active", group: "Markets", category: "Comparables & Screening", status: "live", desc: "Most active / biggest movers" },
-  { code: "RV", label: "Relative Value", group: "Security", category: "Comparables & Screening", security: true, status: "live", desc: "Peer relative valuation multiples" },
+  { code: "EQS", label: "Equity Screener", group: "Markets", category: "Comparables & Screening", status: "live", pinned: true, desc: "Multi-factor equity screening — day gainers, losers & volume leaders" },
+  { code: "MOST", label: "Most Active", group: "Markets", category: "Comparables & Screening", status: "live", desc: "Most active / biggest movers by volume" },
   { code: "SECF", label: "Security Finder", group: "Markets", category: "Comparables & Screening", status: "none", desc: "Cross-asset security search", alt: "Use the command bar's symbol search." },
   { code: "RANK", label: "Ranked Returns", group: "Markets", category: "Comparables & Screening", status: "none", desc: "Sector / peer performance ranking" },
 
   // ── Charting & Technicals ───────────────────────────────────────────
-  { code: "GP", label: "Price Chart", group: "Security", category: "Charting & Technicals", security: true, status: "live", pinned: true, desc: "Candles + SMA/EMA/Bollinger/RSI/MACD" },
+  { code: "GP", label: "Price Chart", group: "Security", category: "Charting & Technicals", security: true, status: "live", pinned: true, desc: "6M daily candles + SMA/EMA, RSI/MACD panes" },
   { code: "SIG", label: "Trade Signals", group: "Security", category: "Charting & Technicals", security: true, status: "live", pinned: true, desc: "Signal dashboard: technicals, valuation, analyst, R:R & position sizing" },
-  { code: "GIP", label: "Intraday Chart", group: "Security", category: "Charting & Technicals", security: true, status: "live", desc: "Intraday price/volume chart" },
-  { code: "G", label: "Custom Charts", group: "Security", category: "Charting & Technicals", security: true, status: "live", desc: "Candle chart with overlays & oscillators" },
-  { code: "TECH", label: "Technical Study", group: "Security", category: "Charting & Technicals", security: true, status: "live", desc: "Candles + SMA/EMA/Bollinger/RSI/MACD" },
+  { code: "GIP", label: "Intraday Chart", group: "Security", category: "Charting & Technicals", security: true, status: "live", desc: "Same chart, defaults to the 1D intraday timeframe" },
+  { code: "G", label: "Custom Charts", group: "Security", category: "Charting & Technicals", security: true, status: "live", desc: "Minimal candles-only quick-look chart — no overlays computed (fastest/lowest-RAM chart)" },
+  { code: "TECH", label: "Technical Study", group: "Security", category: "Charting & Technicals", security: true, status: "live", desc: "Oscillator-forward: Bollinger Bands + RSI/MACD, moving averages off" },
   { code: "GF", label: "Fundamental Graph", group: "Security", category: "Charting & Technicals", security: true, status: "live", desc: "Revenue, income, margins, EPS & cash flow trends" },
   { code: "HVG", label: "Historical Volatility", group: "Security", category: "Charting & Technicals", security: true, status: "live", desc: "Realized volatility windows + 30-day rolling graph" },
 
   // ── Options & Derivatives ───────────────────────────────────────────
-  { code: "OMON", label: "Option Monitor", group: "Security", category: "Options & Derivatives", security: true, status: "none", desc: "Full option chain monitor", alt: "A live calls/puts chain by strike is in the DASH launchpad." },
+  { code: "OMON", label: "Option Monitor", group: "Security", category: "Options & Derivatives", security: true, status: "live", pinned: true, desc: "Full calls/puts option chain by strike & expiration — Yahoo Finance" },
   { code: "OV", label: "Option Valuation", group: "Security", category: "Options & Derivatives", security: true, status: "none", desc: "Theoretical option pricing & greeks" },
   { code: "OSA", label: "Option Scenario", group: "Security", category: "Options & Derivatives", security: true, status: "none", desc: "Position scenario / P&L analysis" },
   { code: "OVME", label: "Option Pricing", group: "Security", category: "Options & Derivatives", security: true, status: "none", desc: "Exotic / vanilla pricer" },
@@ -163,10 +161,10 @@ export const FUNCTIONS: FunctionDef[] = [
   { code: "ECST", label: "Economic Statistics", group: "Markets", category: "Economics & Government", status: "none", desc: "Economic statistics browser", alt: "Key macro indicators are summarised in ECO." },
   { code: "ECFC", label: "Economic Forecasts", group: "Markets", category: "Economics & Government", status: "none", desc: "Consensus economic forecasts" },
   { code: "ECOW", label: "World Economy", group: "Markets", category: "Economics & Government", status: "none", desc: "Global economic monitor", alt: "ECO shows a global macro grid + calendar." },
-  { code: "GDP", label: "GDP", group: "Markets", category: "Economics & Government", status: "none", desc: "Gross domestic product series" },
-  { code: "CPI", label: "Inflation (CPI)", group: "Markets", category: "Economics & Government", status: "none", desc: "Consumer price inflation series", alt: "CPI release dates are flagged in ECO." },
-  { code: "FOMC", label: "FOMC", group: "Markets", category: "Economics & Government", status: "none", desc: "Fed decisions, dots & minutes", alt: "FOMC meeting dates are in the ECO calendar." },
-  { code: "CENB", label: "Central Banks", group: "Markets", category: "Economics & Government", status: "none", desc: "Global central-bank monitor" },
+  { code: "GDP", label: "GDP", group: "Markets", category: "Economics & Government", status: "live", desc: "Real & nominal US GDP, QoQ/YoY growth — FRED" },
+  { code: "CPI", label: "Inflation (CPI)", group: "Markets", category: "Economics & Government", status: "live", desc: "Consumer Price Index level & YoY inflation — FRED" },
+  { code: "FOMC", label: "FOMC", group: "Markets", category: "Economics & Government", status: "live", desc: "Effective Fed Funds Rate history & latest change — FRED", alt: "FOMC meeting dates are in the ECO calendar." },
+  { code: "CENB", label: "Central Banks", group: "Markets", category: "Economics & Government", status: "live", desc: "Fed/ECB/BoE/BoJ policy rates side by side — FRED" },
 
   // ── News & Research ─────────────────────────────────────────────────
   { code: "N", label: "News", group: "Monitor", category: "News & Research", status: "live", pinned: true, desc: "Top news with sentiment" },
@@ -235,11 +233,6 @@ export const FUNCTIONS: FunctionDef[] = [
   { code: "PEOP", label: "People", group: "Monitor", category: "Tools & Messaging", status: "none", desc: "Contacts & people directory" },
   { code: "GRAB", label: "Screen Grab", group: "Monitor", category: "Tools & Messaging", status: "none", desc: "Capture & share a screen" },
   { code: "CALC", label: "Calculators", group: "Monitor", category: "Tools & Messaging", status: "none", desc: "Financial calculators", alt: "A bond price/yield/duration calculator is in YCRV." },
-
-  // ── Quant & Algo Trading ─────────────────────────────────────────────
-  // Roadmap teaser only — no algorithm logic yet. Rendered by QuantView as a
-  // "coming soon" preview grid, not wired to any stub/live data path.
-  { code: "QUANT", label: "Quant Lab", group: "Quant", category: "Quant & Algo Trading", status: "live", pinned: true, desc: "Strategy backtesting, signal screening & systematic research — roadmap" },
 ];
 
 export const FUNCTION_CODES = FUNCTIONS.map((f) => f.code);

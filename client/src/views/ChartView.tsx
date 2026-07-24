@@ -24,14 +24,44 @@ const BASE_LAYOUT = {
 const GRID = { vertLines: { color: "#1a1a1a" }, horzLines: { color: "#1a1a1a" } };
 
 type Overlay = "bb" | "ema" | "sma";
+export type ChartPreset = "gp" | "gip" | "g" | "tech";
 
-export function ChartView({ symbol }: { symbol: string }) {
-  const [timeframe, setTimeframe] = useState<Timeframe>("6M");
-  const [overlays, setOverlays] = useState<Record<Overlay, boolean>>({ bb: false, ema: true, sma: true });
-  const [showRsi, setShowRsi] = useState(true);
-  const [showMacd, setShowMacd] = useState(true);
+// GP/GIP/G/TECH share this view but open with different defaults so they're
+// not exact duplicates: GP is the standard daily chart, GIP forces intraday,
+// TECH leans into oscillators (Bollinger + RSI/MACD, no moving averages), and
+// G is a minimal "quick look" — candles only, nothing computed — which also
+// makes it the cheapest of the four to render.
+const CHART_PRESETS: Record<ChartPreset, { timeframe: Timeframe; overlays: Record<Overlay, boolean>; rsi: boolean; macd: boolean }> = {
+  gp: { timeframe: "6M", overlays: { bb: false, ema: true, sma: true }, rsi: true, macd: true },
+  gip: { timeframe: "1D", overlays: { bb: false, ema: true, sma: true }, rsi: true, macd: true },
+  tech: { timeframe: "6M", overlays: { bb: true, ema: false, sma: false }, rsi: true, macd: true },
+  g: { timeframe: "6M", overlays: { bb: false, ema: false, sma: false }, rsi: false, macd: false },
+};
+const CHART_LABEL: Record<ChartPreset, string> = {
+  gp: "Price Chart",
+  gip: "Intraday Chart",
+  tech: "Technical Study",
+  g: "Quick Chart",
+};
+
+export function ChartView({ symbol, preset = "gp" }: { symbol: string; preset?: ChartPreset }) {
+  const initial = CHART_PRESETS[preset];
+  const [timeframe, setTimeframe] = useState<Timeframe>(initial.timeframe);
+  const [overlays, setOverlays] = useState<Record<Overlay, boolean>>(initial.overlays);
+  const [showRsi, setShowRsi] = useState(initial.rsi);
+  const [showMacd, setShowMacd] = useState(initial.macd);
   const [compare, setCompare] = useState("");
   const [compareInput, setCompareInput] = useState("");
+
+  // Resync defaults when the code (preset) changes — e.g. jumping from GP to
+  // TECH on the same symbol should actually change what's on screen.
+  useEffect(() => {
+    const p = CHART_PRESETS[preset];
+    setTimeframe(p.timeframe);
+    setOverlays(p.overlays);
+    setShowRsi(p.rsi);
+    setShowMacd(p.macd);
+  }, [preset]);
 
   const { data, loading, error } = usePolling(() => api.chart(symbol, timeframe), 60_000, [symbol, timeframe]);
   const candles = useMemo(() => data?.candles ?? [], [data]);
@@ -45,7 +75,7 @@ export function ChartView({ symbol }: { symbol: string }) {
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-3 flex-wrap px-2 py-1 bg-bg-header border-b border-term-border text-2xs">
-        <span className="text-accent-amber font-semibold uppercase">Chart · {symbol}</span>
+        <span className="text-accent-amber font-semibold uppercase">{CHART_LABEL[preset]} · {symbol}</span>
         <div className="flex gap-px">
           {TIMEFRAMES.map((tf) => (
             <button

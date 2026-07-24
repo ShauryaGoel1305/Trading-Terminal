@@ -1,7 +1,5 @@
 import { FUNCTIONS, type FunctionCode, type FuncGroup } from "../functions";
 
-// "Quant" is a top-level section (see SectionSwitcher), not a group shown
-// inline here, so it's intentionally excluded from this bar.
 const GROUP_ORDER: FuncGroup[] = ["Monitor", "Security", "Markets", "Portfolio"];
 
 const GROUP_COLOR: Record<FuncGroup, string> = {
@@ -10,7 +8,6 @@ const GROUP_COLOR: Record<FuncGroup, string> = {
   Markets: "#00b3ff",
   Portfolio: "#00ff41",
   Restricted: "#ff3333",
-  Quant: "#a855f7",
   AI: "#22d3ee",
 };
 

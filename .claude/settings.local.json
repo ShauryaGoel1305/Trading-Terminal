@@ -54,7 +54,14 @@
       "Bash(git rev-list *)",
       "Bash(git commit -m ' *)",
       "Bash(git checkout *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(curl -s http://localhost:3001/api/macro/gdp)",
+      "Bash(curl -s http://localhost:3001/api/macro/cpi)",
+      "Bash(curl -s http://localhost:3001/api/macro/fomc)",
+      "Bash(curl -s http://localhost:3001/api/macro/cenb)",
+      "Bash(curl -s \"http://localhost:3001/api/options/AAPL\")",
+      "Bash(curl -s -H \"User-Agent: Bloomberg Terminal \\(educational\\) admin@local.dev\" \"https://www.sec.gov/files/company_tickers.json\")",
+      "Bash(pkill -f \"npm run dev\")"
     ]
   }
 }
